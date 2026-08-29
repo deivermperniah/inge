@@ -1,0 +1,8 @@
+---
+import { createClient } from '../lib/supabase';
+
+const supabase = createClient(Astro.cookies, Astro.request);
+await supabase.auth.signOut();
+
+return Astro.redirect('/login');
+---
