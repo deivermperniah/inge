@@ -13,7 +13,7 @@ if (Astro.request.method === 'POST') {
 	if (!email || !password) {
 		error = 'Completa todos los campos.';
 	} else {
-		const supabase = createClient(Astro.cookies);
+		const supabase = createClient(Astro.cookies, Astro.request);
 		const { data, error: authError } = await supabase.auth.signUp({
 			email,
 			password,
