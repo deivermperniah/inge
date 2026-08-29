@@ -10,6 +10,47 @@ const {
 if (!user) {
 	return Astro.redirect('/login');
 }
+
+// Marcar / desmarcar tarea
+if (Astro.request.method === 'POST') {
+	const formData = await Astro.request.formData();
+	const taskId = formData.get('task_id')?.toString();
+	const done = formData.get('done') === 'true';
+
+	if (taskId) {
+		await supabase
+			.from('task_progress')
+			.upsert(
+				{ user_id: user.id, task_id: taskId, done, updated_at: new Date().toISOString() },
+				{ onConflict: 'user_id,task_id' },
+			);
+	}
+	return Astro.redirect(Astro.url.pathname + Astro.url.search);
+}
+
+const trimestre = Number(Astro.url.searchParams.get('trimestre') ?? '1');
+
+const { data: trayecto } = await supabase
+	.from('trayectos')
+	.select('id, year')
+	.eq('active', true)
+	.single();
+
+const { data: subjects } = await supabase
+	.from('subjects')
+	.select('id, name, tasks(id, text, trimestre)')
+	.eq('trayecto_id', trayecto?.id)
+	.eq('hidden', false)
+	.order('name');
+
+const { data: progress } = await supabase
+	.from('task_progress')
+	.select('task_id, done')
+	.eq('user_id', user.id);
+
+const doneSet = new Set(
+	progress?.filter((p) => p.done).map((p) => p.task_id),
+);
 ---
 
 <html lang="es">
@@ -22,7 +63,7 @@ if (!user) {
 	</head>
 	<body class="min-h-screen bg-gray-100">
 		<header class="flex items-center justify-between bg-white px-6 py-4 shadow-sm">
-			<h1 class="text-xl font-bold">Inicio</h1>
+			<h1 class="text-xl font-bold">Trayecto {trayecto?.year}</h1>
 			<div class="flex items-center gap-4">
 				<span class="text-sm text-gray-600">{user.email}</span>
 				<a
@@ -35,7 +76,81 @@ if (!user) {
 		</header>
 
 		<main class="mx-auto max-w-4xl p-6">
-			<p class="text-gray-700">Sesión iniciada como <strong>{user.email}</strong>.</p>
+			<nav class="mb-6 flex gap-2">
+				{
+					[1, 2, 3].map((t) => (
+						<a
+							href={`?trimestre=${t}`}
+							class:list={[
+								'rounded px-4 py-2 text-sm font-medium',
+								t === trimestre
+									? 'bg-blue-600 text-white'
+									: 'bg-white text-gray-700 hover:bg-gray-50',
+							]}
+						>
+							Trimestre {t}
+						</a>
+					))
+				}
+			</nav>
+
+			<div class="flex flex-col gap-4">
+				{
+					subjects?.map((subject) => {
+						const tasks = subject.tasks.filter((t) => t.trimestre === trimestre);
+						if (tasks.length === 0) return null;
+
+						return (
+							<section class="rounded-lg bg-white p-5 shadow-sm">
+								<h2 class="mb-3 font-semibold">{subject.name}</h2>
+								<ul class="flex flex-col gap-2">
+									{tasks.map((task) => {
+										const done = doneSet.has(task.id);
+										return (
+											<li>
+												<form method="POST" class="flex items-center gap-3">
+													<input type="hidden" name="task_id" value={task.id} />
+													<input
+														type="hidden"
+														name="done"
+														value={done ? 'false' : 'true'}
+													/>
+													<button
+														type="submit"
+														class:list={[
+															'h-5 w-5 shrink-0 rounded border-2',
+															done
+																? 'border-green-600 bg-green-600'
+																: 'border-gray-300 bg-white hover:border-gray-400',
+														]}
+														aria-label={done ? 'Desmarcar' : 'Marcar'}
+													/>
+													<span
+														class:list={[
+															'text-sm',
+															done && 'text-gray-400 line-through',
+														]}
+													>
+														{task.text}
+													</span>
+												</form>
+											</li>
+										);
+									})}
+								</ul>
+							</section>
+						);
+					})
+				}
+			</div>
+
+			{
+				subjects?.every((s) => s.tasks.every((t) => t.trimestre !== trimestre)) && (
+					<p class="rounded-lg bg-white p-5 text-center text-gray-500 shadow-sm">
+						No hay tareas en este trimestre.
+					</p>
+				)
+			}
 		</main>
 	</body>
 </html>
