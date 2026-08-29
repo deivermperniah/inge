@@ -1,3 +1,28 @@
+# Reglas del proyecto
+
+## Estilo de código
+- Código limpio, organizado y fácil de entender.
+- Trabajar de forma modular.
+
+## Build
+- Después de hacer pruebas, borrar la carpeta `dist`.
+
+## Commits
+- Commits en español.
+- No mezclar archivos: cada commit debe agrupar solo cambios relacionados.
+- Usar la estructura:
+  ```
+  <tipo>[ámbito opcional]: <descripción>
+
+  [cuerpo opcional]
+
+  [nota de pie opcional]
+  ```
+
+## Control de avance
+- No hacer cambios demasiado grandes.
+- Preguntar antes de implementar algo.
+
 ## Development
 
 When starting the dev server, use background mode:
