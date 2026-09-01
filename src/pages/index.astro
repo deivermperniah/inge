@@ -1,6 +1,7 @@
 ---
 import '../styles/global.css';
 import { createClient } from '../lib/supabase';
+import Header from '../components/Header.astro';
 
 const supabase = createClient(Astro.cookies, Astro.request);
 const {
@@ -9,23 +10,6 @@ const {
 
 if (!user) {
 	return Astro.redirect('/login');
-}
-
-// Marcar / desmarcar tarea
-if (Astro.request.method === 'POST') {
-	const formData = await Astro.request.formData();
-	const taskId = formData.get('task_id')?.toString();
-	const done = formData.get('done') === 'true';
-
-	if (taskId) {
-		await supabase
-			.from('task_progress')
-			.upsert(
-				{ user_id: user.id, task_id: taskId, done, updated_at: new Date().toISOString() },
-				{ onConflict: 'user_id,task_id' },
-			);
-	}
-	return Astro.redirect(Astro.url.pathname + Astro.url.search);
 }
 
 const { data: trayecto } = await supabase
@@ -48,6 +32,12 @@ const { data: progress } = await supabase
 
 const doneSet = new Set(progress?.filter((p) => p.done).map((p) => p.task_id));
 
+const { data: profile } = await supabase
+	.from('profiles')
+	.select('role')
+	.eq('id', user.id)
+	.single();
+
 // Estado por trimestre: none | pending | complete
 function trimStatus(tasks: { id: string; trimestre: number }[], t: number) {
 	const ofTrim = tasks.filter((task) => task.trimestre === t);
@@ -66,20 +56,16 @@ function trimStatus(tasks: { id: string; trimestre: number }[], t: number) {
 		<title>Inicio</title>
 	</head>
 	<body class="min-h-screen bg-gray-100">
-		<header class="flex items-center justify-between bg-white px-6 py-4 shadow-sm">
-			<h1 class="text-xl font-bold">Trayecto {trayecto?.year}</h1>
-			<div class="flex items-center gap-4">
-				<span class="text-sm text-gray-600">{user.email}</span>
-				<a
-					href="/logout"
-					class="rounded bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
-				>
-					Salir
-				</a>
-			</div>
-		</header>
+		<Header
+			userEmail={user.email ?? ''}
+			trayectoYear={trayecto?.year}
+			totalSubjects={subjects?.length ?? 0}
+			totalTasks={subjects?.reduce((acc, s) => acc + s.tasks.length, 0) ?? 0}
+			doneTasks={doneSet.size}
+			isAdmin={profile?.role === 'admin'}
+		/>
 
-		<main class="mx-auto max-w-4xl p-6">
+		<main class="mx-auto w-full max-w-5xl p-6">
 			<div class="grid gap-4 sm:grid-cols-2">
 				{
 					subjects?.map((subject) => {
@@ -99,7 +85,10 @@ function trimStatus(tasks: { id: string; trimestre: number }[], t: number) {
 								</div>
 
 								<div class="flex items-center justify-between">
-									<span class="text-sm text-gray-500">
+									<span
+										class="card-count text-sm text-gray-500"
+										data-subject={subject.id}
+									>
 										{done}/{total}
 									</span>
 									<div class="flex gap-1.5">
@@ -107,13 +96,15 @@ function trimStatus(tasks: { id: string; trimestre: number }[], t: number) {
 											const status = trimStatus(subject.tasks, t);
 											return (
 												<span
-													title={`Trimestre ${t}`}
+													class="trim-dot h-2.5 w-2.5 rounded-full"
+													data-subject={subject.id}
+													data-trim={t}
 													class:list={[
-														'h-2.5 w-2.5 rounded-full',
 														status === 'none' && 'bg-gray-200',
 														status === 'pending' && 'bg-amber-400',
 														status === 'complete' && 'bg-green-500',
 													]}
+													title={`Trimestre ${t}`}
 												/>
 											);
 										})}
@@ -182,32 +173,46 @@ function trimStatus(tasks: { id: string; trimestre: number }[], t: number) {
 												const done = doneSet.has(task.id);
 												return (
 													<li>
-														<form method="POST" class="flex items-center gap-3">
-															<input type="hidden" name="task_id" value={task.id} />
-															<input
-																type="hidden"
-																name="done"
-																value={done ? 'false' : 'true'}
-															/>
-															<button
-																type="submit"
-																class:list={[
-																	'h-5 w-5 shrink-0 rounded-full border-2',
-																	done
-																		? 'border-green-600 bg-green-600'
-																		: 'border-gray-300 bg-white hover:border-gray-400',
-																]}
-																aria-label={done ? 'Desmarcar' : 'Marcar'}
-															/>
+														<button
+															type="button"
+class="task-check group flex w-full items-center gap-3 rounded px-1 py-0.5 text-left hover:bg-gray-50"
+														data-task-id={task.id}
+														data-subject={subject.id}
+														data-trim={task.trimestre}
+														aria-pressed={done}
+														>
 															<span
 																class:list={[
-																	'text-sm',
+																	'task-dot flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors',
+																	done
+																		? 'border-green-600 bg-green-600'
+																		: 'border-gray-300 bg-white group-hover:border-gray-400',
+																]}
+															>
+																<svg
+																	class:list={[
+																		'transition-opacity',
+																		done ? 'opacity-100' : 'opacity-0',
+																	]}
+																	viewBox="0 0 12 12"
+																	fill="none"
+																	stroke="white"
+																	stroke-width="2"
+																	stroke-linecap="round"
+																	stroke-linejoin="round"
+																>
+																	<path d="M2 6.5 L5 9.5 L10 3" />
+																</svg>
+															</span>
+															<span
+																class:list={[
+																	'task-text text-sm transition-colors',
 																	done && 'text-gray-400 line-through',
 																]}
 															>
 																{task.text}
 															</span>
-														</form>
+														</button>
 													</li>
 												);
 											})}
@@ -222,13 +227,116 @@ function trimStatus(tasks: { id: string; trimestre: number }[], t: number) {
 		}
 
 		<script>
-			document.querySelectorAll<HTMLButtonElement>('.open-modal').forEach((btn) => {
-				btn.addEventListener('click', () => {
-					const id = btn.dataset.subject;
-					const modal = document.getElementById(`modal-${id}`) as HTMLDialogElement;
-					modal?.showModal();
+			const header = document.querySelector('header[data-total-tasks]');
+			const hdrProg = document.getElementById('hdr-prog');
+			const hdrDone = document.getElementById('hdr-done');
+			const hdrPending = document.getElementById('hdr-pending');
+
+			// Estado global: taskId -> done
+			const state = new Map<string, boolean>();
+			document
+				.querySelectorAll<HTMLButtonElement>('.task-check')
+				.forEach((btn) => {
+					state.set(btn.dataset.taskId!, btn.getAttribute('aria-pressed') === 'true');
 				});
-			});
+
+			function recomputeAll() {
+				// Header global
+				let done = 0;
+				for (const d of state.values()) if (d) done++;
+				const total = state.size;
+				const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+				if (hdrProg) hdrProg.style.width = `${pct}%`;
+				if (hdrDone) hdrDone.textContent = String(done);
+				if (hdrPending) hdrPending.textContent = String(total - done);
+
+				// Cards por asignatura
+				const bySubject = new Map<string, HTMLButtonElement[]>();
+				document
+					.querySelectorAll<HTMLButtonElement>('.task-check')
+					.forEach((btn) => {
+						const subj = btn.dataset.subject!;
+						if (!bySubject.has(subj)) bySubject.set(subj, []);
+						bySubject.get(subj)!.push(btn);
+					});
+
+				for (const [subj, btns] of bySubject) {
+					const totalS = btns.length;
+					const doneS = btns.filter((b) => state.get(b.dataset.taskId!)).length;
+
+					document
+						.querySelectorAll(`[data-subject="${subj}"].card-count`)
+						.forEach((el) => {
+							el.textContent = `${doneS}/${totalS}`;
+						});
+
+					[1, 2, 3].forEach((t) => {
+						const inTrim = btns.filter((b) => Number(b.dataset.trim) === t);
+						let cls = 'bg-gray-200';
+						if (inTrim.length > 0) {
+							cls = inTrim.every((b) => state.get(b.dataset.taskId!))
+								? 'bg-green-500'
+								: 'bg-amber-400';
+						}
+						document
+							.querySelectorAll(
+								`.trim-dot[data-subject="${subj}"][data-trim="${t}"]`,
+							)
+							.forEach((dot) => {
+								dot.className = `trim-dot h-2.5 w-2.5 rounded-full ${cls}`;
+							});
+					});
+				}
+			}
+
+			function setDone(taskId: string, done: boolean) {
+				state.set(taskId, done);
+				document
+					.querySelectorAll<HTMLButtonElement>(`[data-task-id="${taskId}"]`)
+					.forEach((btn) => {
+						btn.setAttribute('aria-pressed', String(done));
+						btn.querySelector('.task-dot')?.classList.toggle('bg-green-600', done);
+						btn.querySelector('.task-dot')?.classList.toggle('border-green-600', done);
+						btn.querySelector('.task-dot svg')?.classList.toggle('opacity-100', done);
+						btn.querySelector('.task-dot svg')?.classList.toggle('opacity-0', !done);
+						btn.querySelector('.task-text')?.classList.toggle('line-through', done);
+						btn.querySelector('.task-text')?.classList.toggle('text-gray-400', done);
+					});
+				recomputeAll();
+			}
+
+			async function toggleTask(btn: HTMLButtonElement) {
+				const taskId = btn.dataset.taskId!;
+				const nowDone = !state.get(taskId);
+				setDone(taskId, nowDone);
+
+				try {
+					const res = await fetch('/api/tasks/toggle', {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify({ task_id: taskId, done: nowDone }),
+					});
+					if (!res.ok) setDone(taskId, !nowDone);
+				} catch {
+					setDone(taskId, !nowDone);
+				}
+			}
+
+			document
+				.querySelectorAll<HTMLButtonElement>('.open-modal')
+				.forEach((btn) => {
+					btn.addEventListener('click', () => {
+						const id = btn.dataset.subject;
+						const modal = document.getElementById(`modal-${id}`) as HTMLDialogElement;
+						modal?.showModal();
+					});
+				});
+
+			document
+				.querySelectorAll<HTMLButtonElement>('.task-check')
+				.forEach((btn) => {
+					btn.addEventListener('click', () => toggleTask(btn));
+				});
 		</script>
 	</body>
 </html>
