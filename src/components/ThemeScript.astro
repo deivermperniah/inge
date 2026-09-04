@@ -1,0 +1,17 @@
+---
+// Aplica el tema (light/dark/system) antes del primer render para evitar parpadeo.
+// is:inline para que se ejecute inmediatamente en el <head>.
+// Fija data-theme y data-effective en <html> para que el resto de la UI reaccione.
+---
+<script is:inline>
+	(function () {
+		try {
+			const stored = localStorage.getItem('theme') ?? 'system';
+			const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+			const isDark = stored === 'dark' || (stored === 'system' && prefersDark);
+			document.documentElement.dataset.theme = stored;
+			document.documentElement.dataset.effective = isDark ? 'dark' : 'light';
+			document.documentElement.classList.toggle('dark', isDark);
+		} catch {}
+	})();
+</script>
