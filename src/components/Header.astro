@@ -1,122 +1,193 @@
 ---
 interface Props {
 	userEmail: string;
-	trayectoYear?: number;
-	totalSubjects: number;
 	totalTasks: number;
 	doneTasks: number;
 	isAdmin: boolean;
 }
 
-const { userEmail, trayectoYear, totalSubjects, totalTasks, doneTasks, isAdmin } =
-	Astro.props;
+const { userEmail, totalTasks, doneTasks, isAdmin } = Astro.props;
 
 const pendingTasks = totalTasks - doneTasks;
 const pct = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0;
 ---
 
 <header
-	class="sticky top-0 z-40 border-b border-gray-200 bg-white/90 shadow-sm backdrop-blur-md"
+	class="sticky top-0 z-40 border-b border-gray-200 bg-white/90 shadow-sm backdrop-blur-md dark:border-gray-800 dark:bg-gray-900/90"
 	data-total-tasks={totalTasks}
 	data-done-tasks={doneTasks}
 >
 	<div class="mx-auto flex h-14 w-full max-w-5xl items-center justify-between gap-4 px-6">
 		<div class="flex items-center gap-6">
-			<a href="/" class="text-xl font-bold tracking-tight">inge</a>
-
-			<div class="hidden items-center gap-3 sm:flex">
-				<span class="rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-700">
-					<strong>{totalSubjects}</strong> asignaturas
-				</span>
-
-				<div class="group relative">
-					<span
-						class="cursor-help rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-700"
-					>
-						<strong>{totalTasks}</strong> tareas
-					</span>
-					<div
-						class="invisible absolute left-1/2 top-full z-50 mt-2 min-w-40 -translate-x-1/2 rounded-lg border border-gray-200 bg-white p-3 opacity-0 shadow-lg transition group-hover:visible group-hover:opacity-100"
-					>
-						<div class="flex justify-between gap-4 text-sm">
-							<span class="text-gray-500">✅ Realizadas:</span>
-							<strong id="hdr-done">{doneTasks}</strong>
-						</div>
-						<div class="mt-1 flex justify-between gap-4 text-sm">
-							<span class="text-gray-500">⏳ Faltantes:</span>
-							<strong id="hdr-pending">{pendingTasks}</strong>
-						</div>
-					</div>
-				</div>
-
-				{trayectoYear && (
-					<span class="text-sm text-gray-500">Trayecto {trayectoYear}</span>
-				)}
-			</div>
+			<a href="/" class="text-xl font-bold tracking-tight dark:text-white">inge</a>
 		</div>
 
-		<div class="relative">
+		<div class="flex items-center gap-2">
+			{
+				isAdmin && (
+					<div class="relative">
+						<button
+							id="admin-btn"
+							class="flex items-center gap-1 rounded px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+							title="Opciones de administrador"
+						>
+							🛠
+						</button>
+
+						<div
+							id="admin-menu"
+							hidden
+							class="absolute right-0 top-full z-50 mt-2 w-64 rounded-lg border border-gray-200 bg-white p-4 shadow-lg dark:border-gray-700 dark:bg-gray-800"
+						>
+							<span
+								class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400"
+							>
+								Admin
+							</span>
+							<div class="mt-2 flex flex-col gap-1">
+								<a
+									href="/admin/asignaturas"
+									class="rounded px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
+								>
+									👁 Visibilidad de asignaturas
+								</a>
+								<span
+									class="cursor-not-allowed rounded px-3 py-2 text-sm text-gray-400 dark:text-gray-500"
+								>
+									📚 Gestionar materias y tareas
+									<span class="text-xs">(próximamente)</span>
+								</span>
+								<span
+									class="cursor-not-allowed rounded px-3 py-2 text-sm text-gray-400 dark:text-gray-500"
+								>
+									👥 Usuarios
+									<span class="text-xs">(próximamente)</span>
+								</span>
+								<span
+									class="cursor-not-allowed rounded px-3 py-2 text-sm text-gray-400 dark:text-gray-500"
+								>
+									🔑 Cambiar roles
+									<span class="text-xs">(próximamente)</span>
+								</span>
+							</div>
+						</div>
+					</div>
+				)
+			}
+
+			<button
+				id="subjects-btn"
+				class="flex items-center gap-1 rounded px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+				title="Mis materias"
+			>
+				📚
+			</button>
+
+			<button
+				id="schedule-btn"
+				class="flex items-center gap-1 rounded px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+				title="Docentes"
+			>
+				🗓
+			</button>
+
+			<button
+				id="theme-btn"
+				class="flex items-center gap-1 rounded px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+				title="Cambiar tema"
+			>
+				<span id="theme-icon" class="flex h-6 w-6 items-center justify-center">
+					<svg
+						id="theme-icon-system"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						class="theme-icon h-5 w-5"
+					>
+						<rect x="3" y="4" width="18" height="12" rx="2" />
+						<path d="M2 20h20" />
+					</svg>
+					<svg
+						id="theme-icon-light"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						class="theme-icon hidden h-5 w-5"
+					>
+						<circle cx="12" cy="12" r="4" />
+						<path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+					</svg>
+					<svg
+						id="theme-icon-dark"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						class="theme-icon hidden h-5 w-5"
+					>
+						<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+					</svg>
+				</span>
+			</button>
+
+			<div class="relative">
 			<button
 				id="settings-btn"
-				class="flex items-center gap-1 rounded px-3 py-2 text-sm text-gray-700 hover:bg-gray-100"
-				title="Configuración"
+				class="flex items-center gap-2 rounded px-2 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+				title="Cuenta"
 			>
-				⚙
+				<span class="flex h-6 w-6 items-center justify-center rounded-full bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+					<svg
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						class="h-4 w-4"
+					>
+						<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+						<circle cx="12" cy="7" r="4" />
+					</svg>
+				</span>
 			</button>
 
 			<div
 				id="settings-menu"
 				hidden
-				class="absolute right-0 top-full z-50 mt-2 w-64 rounded-lg border border-gray-200 bg-white p-4 shadow-lg"
+				class="absolute right-0 top-full z-50 mt-2 w-64 rounded-lg border border-gray-200 bg-white p-4 shadow-lg dark:border-gray-700 dark:bg-gray-800"
 			>
 				<div class="mb-4">
-					<span class="text-xs font-semibold uppercase tracking-wide text-gray-500">
-						Cuenta
-					</span>
-					<p class="mt-1 truncate text-sm text-gray-700">{userEmail}</p>
-				</div>
-
-				<div class="mb-4">
-					<span class="text-xs font-semibold uppercase tracking-wide text-gray-500">
-						Tema
-					</span>
-					<select
-						id="theme-select"
-						class="mt-1 w-full rounded border border-gray-300 px-2 py-1.5 text-sm"
+					<span
+						class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400"
 					>
-						<option value="system">Sistema</option>
-						<option value="dark">Oscuro</option>
-						<option value="light">Claro</option>
-					</select>
+						Email
+					</span>
+					<p class="mt-1 truncate text-sm text-gray-700 dark:text-gray-300">
+						{userEmail}
+					</p>
 				</div>
-
-				{
-					isAdmin && (
-						<div class="mb-4">
-							<span class="text-xs font-semibold uppercase tracking-wide text-gray-500">
-								Asignaturas
-							</span>
-							<a
-								href="/admin/asignaturas"
-								class="mt-1 block rounded border border-gray-300 px-3 py-1.5 text-center text-sm hover:bg-gray-50"
-							>
-								Visibilidad
-							</a>
-						</div>
-					)
-				}
 
 				<a
 					href="/logout"
-					class="block rounded border border-gray-300 px-3 py-1.5 text-center text-sm text-red-600 hover:bg-red-50"
+					class="block rounded border border-gray-300 px-3 py-1.5 text-center text-sm text-red-600 hover:bg-red-50 dark:border-gray-600 dark:text-red-400 dark:hover:bg-red-950/40"
 				>
 					Cerrar sesión
 				</a>
 			</div>
 		</div>
+		</div>
 	</div>
 
-	<div class="h-1 bg-gray-200">
+	<div class="h-1 bg-gray-200 dark:bg-gray-800">
 		<div
 			id="hdr-prog"
 			class="h-full bg-blue-600 transition-all duration-300"
@@ -128,19 +199,101 @@ const pct = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0;
 <script>
 	const btn = document.getElementById('settings-btn')!;
 	const menu = document.getElementById('settings-menu')!;
+	const subjectsBtn = document.getElementById('subjects-btn') as HTMLButtonElement | null;
+	const scheduleBtn = document.getElementById('schedule-btn') as HTMLButtonElement | null;
+	const adminBtn = document.getElementById('admin-btn') as HTMLButtonElement | null;
+	const adminMenu = document.getElementById('admin-menu') as HTMLElement | null;
+	const themeBtn = document.getElementById('theme-btn') as HTMLButtonElement | null;
+	const themeIcons: Record<string, HTMLElement | null> = {
+		system: document.getElementById('theme-icon-system'),
+		light: document.getElementById('theme-icon-light'),
+		dark: document.getElementById('theme-icon-dark'),
+	};
+
+	function applyThemeIcon(theme: string) {
+		// Muestra el icono del modo seleccionado (3 iconos distintos)
+		for (const [key, el] of Object.entries(themeIcons)) {
+			if (!el) continue;
+			if (key === theme) {
+				el.classList.remove('hidden');
+			} else {
+				el.classList.add('hidden');
+			}
+		}
+	}
+
+	function applyTheme(theme: string) {
+		localStorage.setItem('theme', theme);
+		const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+		const isDark = theme === 'dark' || (theme === 'system' && prefersDark);
+		document.documentElement.dataset.theme = theme;
+		document.documentElement.dataset.effective = isDark ? 'dark' : 'light';
+		document.documentElement.classList.toggle('dark', isDark);
+		applyThemeIcon(theme);
+	}
+
+	if (themeBtn) {
+		const theme = localStorage.getItem('theme') ?? 'system';
+		applyThemeIcon(theme);
+
+		themeBtn.addEventListener('click', () => {
+			const current = localStorage.getItem('theme') ?? 'system';
+			const next =
+				current === 'system' ? 'light' : current === 'light' ? 'dark' : 'system';
+			applyTheme(next);
+		});
+
+		window
+			.matchMedia('(prefers-color-scheme: dark)')
+			.addEventListener('change', (e) => {
+				if ((localStorage.getItem('theme') ?? 'system') === 'system') {
+					document.documentElement.dataset.effective = e.matches ? 'dark' : 'light';
+					document.documentElement.classList.toggle('dark', e.matches);
+					applyThemeIcon('system');
+				}
+			});
+	}
+
+	if (subjectsBtn) {
+		subjectsBtn.addEventListener('click', () => {
+			menu.hidden = true;
+			if (adminMenu) adminMenu.hidden = true;
+			document.dispatchEvent(new Event('open-subjects-modal'));
+		});
+	}
+
+	if (scheduleBtn) {
+		scheduleBtn.addEventListener('click', () => {
+			menu.hidden = true;
+			if (adminMenu) adminMenu.hidden = true;
+			document.dispatchEvent(new Event('open-schedule-modal'));
+		});
+	}
+
+	if (adminBtn && adminMenu) {
+		adminBtn.addEventListener('click', (e) => {
+			e.stopPropagation();
+			adminMenu.hidden = !adminMenu.hidden;
+			menu.hidden = true;
+		});
+
+		document.addEventListener('click', (e) => {
+			if (!adminMenu.hidden && !adminMenu.contains(e.target as Node)) {
+				adminMenu.hidden = true;
+			}
+		});
+	}
 
 	btn.addEventListener('click', (e) => {
 		e.stopPropagation();
 		menu.hidden = !menu.hidden;
-	});
-
-	document.addEventListener('click', (e) => {
-		if (!menu.hidden && !menu.contains(e.target as Node)) {
-			menu.hidden = true;
-		}
+		if (adminMenu) adminMenu.hidden = true;
 	});
 
 	document.addEventListener('keydown', (e) => {
-		if (e.key === 'Escape') menu.hidden = true;
+		if (e.key === 'Escape') {
+			menu.hidden = true;
+			if (adminMenu) adminMenu.hidden = true;
+		}
 	});
 </script>

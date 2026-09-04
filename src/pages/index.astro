@@ -2,6 +2,9 @@
 import '../styles/global.css';
 import { createClient } from '../lib/supabase';
 import Header from '../components/Header.astro';
+import ThemeScript from '../components/ThemeScript.astro';
+import SubjectsModal from '../components/SubjectsModal.astro';
+import ScheduleModal from '../components/ScheduleModal.astro';
 
 const supabase = createClient(Astro.cookies, Astro.request);
 const {
@@ -14,7 +17,7 @@ if (!user) {
 
 const { data: trayecto } = await supabase
 	.from('trayectos')
-	.select('id, year')
+	.select('id, year, name')
 	.eq('active', true)
 	.single();
 
@@ -24,6 +27,14 @@ const { data: subjects } = await supabase
 	.eq('trayecto_id', trayecto?.id)
 	.eq('hidden', false)
 	.order('name');
+
+const { data: hidden } = await supabase
+	.from('hidden_subjects')
+	.select('subject_id')
+	.eq('user_id', user.id);
+
+const hiddenSet = new Set(hidden?.map((h) => h.subject_id));
+const visibleSubjects = subjects?.filter((s) => !hiddenSet.has(s.id));
 
 const { data: progress } = await supabase
 	.from('task_progress')
@@ -38,12 +49,14 @@ const { data: profile } = await supabase
 	.eq('id', user.id)
 	.single();
 
-// Estado por trimestre: none | pending | complete
+// Estado por trimestre: none | pending | progress | complete
 function trimStatus(tasks: { id: string; trimestre: number }[], t: number) {
 	const ofTrim = tasks.filter((task) => task.trimestre === t);
 	if (ofTrim.length === 0) return 'none';
-	const allDone = ofTrim.every((task) => doneSet.has(task.id));
-	return allDone ? 'complete' : 'pending';
+	const doneCount = ofTrim.filter((task) => doneSet.has(task.id)).length;
+	if (doneCount === 0) return 'pending';
+	if (doneCount === ofTrim.length) return 'complete';
+	return 'progress';
 }
 ---
 
@@ -53,40 +66,59 @@ function trimStatus(tasks: { id: string; trimestre: number }[], t: number) {
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<link rel="icon" href="/favicon.ico" />
 		<meta name="viewport" content="width=device-width" />
+		<ThemeScript />
 		<title>Inicio</title>
 	</head>
-	<body class="min-h-screen bg-gray-100">
+	<body class="min-h-screen bg-gray-100 dark:bg-gray-950">
 		<Header
 			userEmail={user.email ?? ''}
-			trayectoYear={trayecto?.year}
-			totalSubjects={subjects?.length ?? 0}
-			totalTasks={subjects?.reduce((acc, s) => acc + s.tasks.length, 0) ?? 0}
+			totalTasks={visibleSubjects?.reduce((acc, s) => acc + s.tasks.length, 0) ?? 0}
 			doneTasks={doneSet.size}
 			isAdmin={profile?.role === 'admin'}
 		/>
 
 		<main class="mx-auto w-full max-w-5xl p-6">
+			<div class="mb-6 flex flex-wrap items-center gap-3">
+				<span
+					class="rounded-full bg-white px-4 py-1.5 text-sm text-gray-700 shadow-sm dark:bg-gray-900 dark:text-gray-300"
+				>
+					Trayecto{' '}
+					<strong>{trayecto?.name ?? trayecto?.year}</strong>{trayecto?.name ? ` · ${trayecto?.year}` : ''}
+				</span>
+				<span
+					class="rounded-full bg-white px-4 py-1.5 text-sm text-gray-700 shadow-sm dark:bg-gray-900 dark:text-gray-300"
+				>
+					<strong>{visibleSubjects?.length ?? 0}</strong> asignaturas
+				</span>
+				<span
+					class="rounded-full bg-white px-4 py-1.5 text-sm text-gray-700 shadow-sm dark:bg-gray-900 dark:text-gray-300"
+				>
+					<strong>{visibleSubjects?.reduce((acc, s) => acc + s.tasks.length, 0) ?? 0}</strong>{' '}
+					tareas
+				</span>
+			</div>
+
 			<div class="grid gap-4 sm:grid-cols-2">
 				{
-					subjects?.map((subject) => {
+					visibleSubjects?.map((subject) => {
 						const total = subject.tasks.length;
 						const done = subject.tasks.filter((t) => doneSet.has(t.id)).length;
 
 						return (
 							<button
 								data-subject={subject.id}
-								class="open-modal flex flex-col gap-3 rounded-lg bg-white p-5 text-left shadow-sm transition hover:shadow-md"
+								class="open-modal flex flex-col gap-3 rounded-lg bg-white p-5 text-left shadow-sm transition hover:shadow-md dark:bg-gray-900 dark:text-gray-100"
 							>
 								<div class="flex items-start justify-between gap-2">
 									<h2 class="font-semibold">{subject.name}</h2>
-									<span class="text-gray-400" aria-hidden="true">
+									<span class="text-gray-400 dark:text-gray-600" aria-hidden="true">
 										›
 									</span>
 								</div>
 
 								<div class="flex items-center justify-between">
 									<span
-										class="card-count text-sm text-gray-500"
+										class="card-count text-sm text-gray-500 dark:text-gray-400"
 										data-subject={subject.id}
 									>
 										{done}/{total}
@@ -99,18 +131,19 @@ function trimStatus(tasks: { id: string; trimestre: number }[], t: number) {
 													class="trim-dot h-2.5 w-2.5 rounded-full"
 													data-subject={subject.id}
 													data-trim={t}
-													class:list={[
-														status === 'none' && 'bg-gray-200',
-														status === 'pending' && 'bg-amber-400',
-														status === 'complete' && 'bg-green-500',
-													]}
-													title={`Trimestre ${t}`}
-												/>
-											);
-										})}
-									</div>
+class:list={[
+													status === 'none' && 'bg-gray-200 dark:bg-gray-700',
+													status === 'pending' && 'bg-red-400',
+													status === 'progress' && 'bg-amber-400',
+													status === 'complete' && 'bg-green-500',
+												]}
+												title={`Trimestre ${t}`}
+											/>
+										);
+									})}
 								</div>
-							</button>
+							</div>
+						</button>
 						);
 					})
 				}
@@ -118,12 +151,12 @@ function trimStatus(tasks: { id: string; trimestre: number }[], t: number) {
 		</main>
 
 		{
-			subjects?.map((subject) => (
+			visibleSubjects?.map((subject) => (
 				<dialog
 					id={`modal-${subject.id}`}
-					class="m-auto w-full max-w-lg rounded-lg p-0 backdrop:bg-black/50"
+					class="m-auto w-full max-w-lg rounded-lg p-0 text-gray-900 backdrop:bg-black/50 dark:bg-gray-900 dark:text-gray-100 dark:backdrop:bg-black/70"
 				>
-					<div class="flex items-center justify-between border-b px-6 py-4">
+					<div class="flex items-center justify-between border-b border-gray-200 px-6 py-4 dark:border-gray-700">
 						<div class="flex items-center gap-3">
 							<h3 class="font-semibold">{subject.name}</h3>
 							<div class="flex gap-1.5">
@@ -131,13 +164,16 @@ function trimStatus(tasks: { id: string; trimestre: number }[], t: number) {
 									const status = trimStatus(subject.tasks, t);
 									return (
 										<span
-											title={`Trimestre ${t}`}
+											class="trim-dot h-2.5 w-2.5 rounded-full"
+											data-subject={subject.id}
+											data-trim={t}
 											class:list={[
-												'h-2.5 w-2.5 rounded-full',
-												status === 'none' && 'bg-gray-200',
-												status === 'pending' && 'bg-amber-400',
+												status === 'none' && 'bg-gray-200 dark:bg-gray-700',
+												status === 'pending' && 'bg-red-400',
+												status === 'progress' && 'bg-amber-400',
 												status === 'complete' && 'bg-green-500',
 											]}
+											title={`Trimestre ${t}`}
 										/>
 									);
 								})}
@@ -145,7 +181,7 @@ function trimStatus(tasks: { id: string; trimestre: number }[], t: number) {
 						</div>
 						<form method="dialog">
 							<button
-								class="rounded p-1 text-gray-500 hover:bg-gray-100"
+								class="rounded p-1 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
 								aria-label="Cerrar"
 							>
 								✕
@@ -155,7 +191,7 @@ function trimStatus(tasks: { id: string; trimestre: number }[], t: number) {
 
 					<div class="max-h-96 overflow-y-auto px-6 py-4">
 						{subject.tasks.length === 0 ? (
-							<p class="py-4 text-center text-sm text-gray-500">
+							<p class="py-4 text-center text-sm text-gray-500 dark:text-gray-400">
 								Ninguna tarea aún
 							</p>
 						) : (
@@ -165,7 +201,7 @@ function trimStatus(tasks: { id: string; trimestre: number }[], t: number) {
 
 								return (
 									<div class="mb-4 last:mb-0">
-										<h4 class="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+										<h4 class="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
 											Trimestre {t}
 										</h4>
 										<ul class="flex flex-col gap-2">
@@ -175,7 +211,7 @@ function trimStatus(tasks: { id: string; trimestre: number }[], t: number) {
 													<li>
 														<button
 															type="button"
-class="task-check group flex w-full items-center gap-3 rounded px-1 py-0.5 text-left hover:bg-gray-50"
+															class="task-check group flex w-full items-center gap-3 rounded px-1 py-0.5 text-left hover:bg-gray-50 dark:hover:bg-gray-800"
 														data-task-id={task.id}
 														data-subject={subject.id}
 														data-trim={task.trimestre}
@@ -186,7 +222,7 @@ class="task-check group flex w-full items-center gap-3 rounded px-1 py-0.5 text-
 																	'task-dot flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors',
 																	done
 																		? 'border-green-600 bg-green-600'
-																		: 'border-gray-300 bg-white group-hover:border-gray-400',
+																		: 'border-gray-300 bg-white group-hover:border-gray-400 dark:border-gray-600 dark:bg-gray-800',
 																]}
 															>
 																<svg
@@ -204,12 +240,14 @@ class="task-check group flex w-full items-center gap-3 rounded px-1 py-0.5 text-
 																	<path d="M2 6.5 L5 9.5 L10 3" />
 																</svg>
 															</span>
-															<span
-																class:list={[
-																	'task-text text-sm transition-colors',
-																	done && 'text-gray-400 line-through',
-																]}
-															>
+<span
+															class:list={[
+																'task-text text-sm transition-colors',
+																done
+																	? 'text-gray-400 line-through dark:text-gray-500'
+																	: 'text-gray-900 dark:text-gray-200',
+															]}
+														>
 																{task.text}
 															</span>
 														</button>
@@ -225,6 +263,9 @@ class="task-check group flex w-full items-center gap-3 rounded px-1 py-0.5 text-
 				</dialog>
 			))
 		}
+
+		<SubjectsModal subjects={subjects ?? []} hidden={hiddenSet} />
+		<ScheduleModal subjects={subjects ?? []} done={doneSet} />
 
 		<script>
 			const header = document.querySelector('header[data-total-tasks]');
@@ -272,18 +313,36 @@ class="task-check group flex w-full items-center gap-3 rounded px-1 py-0.5 text-
 
 					[1, 2, 3].forEach((t) => {
 						const inTrim = btns.filter((b) => Number(b.dataset.trim) === t);
-						let cls = 'bg-gray-200';
+						let dotCls = 'bg-gray-200 dark:bg-gray-700';
+						let cellCls = '';
 						if (inTrim.length > 0) {
-							cls = inTrim.every((b) => state.get(b.dataset.taskId!))
-								? 'bg-green-500'
-								: 'bg-amber-400';
+							const doneCount = inTrim.filter(
+								(b) => state.get(b.dataset.taskId!),
+							).length;
+							if (doneCount === 0) {
+								dotCls = 'bg-red-400';
+								cellCls = 'bg-red-400';
+							} else if (doneCount === inTrim.length) {
+								dotCls = 'bg-green-500';
+								cellCls = 'bg-green-500';
+							} else {
+								dotCls = 'bg-amber-400';
+								cellCls = 'bg-amber-400';
+							}
 						}
 						document
 							.querySelectorAll(
 								`.trim-dot[data-subject="${subj}"][data-trim="${t}"]`,
 							)
 							.forEach((dot) => {
-								dot.className = `trim-dot h-2.5 w-2.5 rounded-full ${cls}`;
+								dot.className = `trim-dot h-2.5 w-2.5 rounded-full ${dotCls}`;
+							});
+						document
+							.querySelectorAll(
+								`.schedule-cell[data-subject="${subj}"][data-trim="${t}"]`,
+							)
+							.forEach((cell) => {
+								cell.className = `schedule-cell border-r border-gray-200 px-3 py-2 last:border-r-0 dark:border-gray-700 ${cellCls}`;
 							});
 					});
 				}
@@ -295,12 +354,39 @@ class="task-check group flex w-full items-center gap-3 rounded px-1 py-0.5 text-
 					.querySelectorAll<HTMLButtonElement>(`[data-task-id="${taskId}"]`)
 					.forEach((btn) => {
 						btn.setAttribute('aria-pressed', String(done));
-						btn.querySelector('.task-dot')?.classList.toggle('bg-green-600', done);
-						btn.querySelector('.task-dot')?.classList.toggle('border-green-600', done);
+						const dot = btn.querySelector('.task-dot');
+						if (dot) {
+							// Limpiar todas las variantes de fondo y borde
+							dot.classList.remove(
+								'bg-white',
+								'bg-green-600',
+								'border-gray-300',
+								'border-gray-400',
+								'border-green-600',
+								'dark:bg-gray-800',
+								'dark:border-gray-600',
+							);
+							if (done) {
+								dot.classList.add('bg-green-600', 'border-green-600');
+							} else {
+								dot.classList.add(
+									'bg-white',
+									'border-gray-300',
+									'dark:bg-gray-800',
+									'dark:border-gray-600',
+								);
+							}
+						}
 						btn.querySelector('.task-dot svg')?.classList.toggle('opacity-100', done);
 						btn.querySelector('.task-dot svg')?.classList.toggle('opacity-0', !done);
-						btn.querySelector('.task-text')?.classList.toggle('line-through', done);
-						btn.querySelector('.task-text')?.classList.toggle('text-gray-400', done);
+						const taskText = btn.querySelector('.task-text');
+						if (taskText) {
+							taskText.classList.toggle('line-through', done);
+							taskText.classList.toggle('text-gray-400', done);
+							taskText.classList.toggle('dark:text-gray-500', done);
+							taskText.classList.toggle('text-gray-900', !done);
+							taskText.classList.toggle('dark:text-gray-200', !done);
+						}
 					});
 				recomputeAll();
 			}

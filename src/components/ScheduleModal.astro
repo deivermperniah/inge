@@ -1,0 +1,106 @@
+---
+import { SCHEDULE } from '../data/schedule';
+
+interface Props {
+	subjects: {
+		id: string;
+		name: string;
+		tasks: { id: string; trimestre: number }[];
+	}[];
+	done: Set<string>;
+}
+
+const { subjects, done } = Astro.props;
+
+// Estado de una materia en un trimestre: none | pending | progress | complete
+function trimState(
+	subj: { name: string; tasks: { id: string; trimestre: number }[] },
+	t: number,
+) {
+	const ofTrim = subj.tasks.filter((task) => task.trimestre === t);
+	if (ofTrim.length === 0) return 'none';
+	const doneCount = ofTrim.filter((task) => done.has(task.id)).length;
+	if (doneCount === 0) return 'pending';
+	if (doneCount === ofTrim.length) return 'complete';
+	return 'progress';
+}
+
+const stateClass = {
+	none: '',
+	pending: 'bg-red-400',
+	progress: 'bg-amber-400',
+	complete: 'bg-green-500',
+} as const;
+
+// Expande cada celda en su cantidad de columnas para mantener 3 columnas parejas
+const expandedCells = (row: (typeof SCHEDULE)[number]) =>
+	row.cells.flatMap((cell) =>
+		Array.from({ length: cell.span ?? 1 }, () => cell.text),
+	).slice(0, 3);
+---
+
+<dialog
+	id="schedule-modal"
+	class="m-auto w-full max-w-4xl rounded-lg p-0 text-gray-900 backdrop:bg-black/50 dark:bg-gray-900 dark:text-gray-100 dark:backdrop:bg-black/70"
+>
+	<div class="flex items-center justify-between border-b border-gray-200 px-6 py-4 dark:border-gray-700">
+		<h2 class="font-semibold">Trayecto III · 2026</h2>
+		<form method="dialog">
+			<button
+				class="rounded p-1 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
+				aria-label="Cerrar"
+			>
+				✕
+			</button>
+		</form>
+	</div>
+
+	<div class="max-h-[70vh] overflow-auto px-6 py-4">
+		<table class="w-full table-fixed border-collapse text-sm">
+			<thead>
+				<tr class="border-b border-gray-200 dark:border-gray-700">
+					<th class="w-[40%] border-b border-r border-gray-200 px-3 py-2 text-left font-semibold dark:border-gray-700 dark:text-gray-200">
+						Unidad Curricular
+					</th>
+					{[1, 2, 3].map((t) => (
+						<th class="border-b border-r border-gray-200 px-3 py-2 text-center font-semibold last:border-r-0 dark:border-gray-700 dark:text-gray-200">
+							Trimestre {t}
+						</th>
+					))}
+				</tr>
+			</thead>
+			<tbody>
+				{
+					SCHEDULE.map((row) => {
+						const subj = subjects?.find((s) => s.name === row.subject);
+						return (
+							<tr class="border-b border-gray-200 dark:border-gray-800">
+								<td class="border-r border-gray-200 px-3 py-2 dark:border-gray-700">
+									<strong class="dark:text-gray-200">{row.subject}</strong>
+								</td>
+								{expandedCells(row).map((_, idx) => {
+									const state = subj ? trimState(subj, idx + 1) : 'none';
+									return (
+										<td
+											class="schedule-cell border-r border-gray-200 px-3 py-2 last:border-r-0 dark:border-gray-700"
+											class:list={[stateClass[state]]}
+											data-subject={subj?.id ?? ''}
+											data-trim={idx + 1}
+										/>
+									);
+								})}
+							</tr>
+						);
+					})
+				}
+			</tbody>
+		</table>
+	</div>
+</dialog>
+
+<script>
+	document.addEventListener('open-schedule-modal', () => {
+		const modal = document.getElementById('schedule-modal') as HTMLDialogElement;
+		modal?.showModal();
+	});
+</script>

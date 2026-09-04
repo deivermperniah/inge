@@ -1,0 +1,167 @@
+---
+import '../../styles/global.css';
+import { createClient } from '../../lib/supabase';
+import Header from '../../components/Header.astro';
+import ThemeScript from '../../components/ThemeScript.astro';
+
+const supabase = createClient(Astro.cookies, Astro.request);
+const {
+	data: { user },
+} = await supabase.auth.getUser();
+
+if (!user) {
+	return Astro.redirect('/login');
+}
+
+const { data: profile } = await supabase
+	.from('profiles')
+	.select('role')
+	.eq('id', user.id)
+	.single();
+
+if (profile?.role !== 'admin') {
+	return Astro.redirect('/');
+}
+
+const { data: trayecto } = await supabase
+	.from('trayectos')
+	.select('id, year')
+	.eq('active', true)
+	.single();
+
+const { data: subjects } = await supabase
+	.from('subjects')
+	.select('id, name, hidden')
+	.eq('trayecto_id', trayecto?.id)
+	.order('name');
+---
+
+<html lang="es">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<link rel="icon" href="/favicon.ico" />
+		<meta name="viewport" content="width=device-width" />
+		<ThemeScript />
+		<title>Visibilidad de asignaturas</title>
+	</head>
+	<body class="min-h-screen bg-gray-100 dark:bg-gray-950">
+		<Header
+			userEmail={user.email ?? ''}
+			totalTasks={0}
+			doneTasks={0}
+			isAdmin={true}
+		/>
+
+		<main class="mx-auto w-full max-w-5xl p-6">
+			<div class="mb-6 flex items-center justify-between">
+				<h1 class="text-xl font-bold dark:text-white">
+					Visibilidad de asignaturas
+				</h1>
+				<a
+					href="/"
+					class="rounded bg-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-300 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+				>
+					← Volver
+				</a>
+			</div>
+
+			<p class="mb-4 text-sm text-gray-500 dark:text-gray-400">
+				Las materias ocultas no aparecen para los usuarios en el inicio.
+			</p>
+
+			<ul class="flex flex-col gap-2">
+				{
+					subjects?.map((subject) => (
+						<li
+							class="flex items-center justify-between rounded-lg bg-white p-4 shadow-sm dark:bg-gray-900"
+						>
+							<span class="font-medium dark:text-gray-100">{subject.name}</span>
+							<button
+								type="button"
+								class="subject-toggle flex items-center gap-3 rounded px-2 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-800"
+								data-subject-id={subject.id}
+								data-hidden={String(subject.hidden)}
+							>
+								<span
+									class:list={[
+										'subject-label text-sm',
+										subject.hidden
+											? 'text-red-600 dark:text-red-400'
+											: 'text-green-600 dark:text-green-400',
+									]}
+								>
+									{subject.hidden ? 'Oculta' : 'Visible'}
+								</span>
+								<span
+									class:list={[
+										'relative inline-block h-6 w-11 rounded-full transition-colors',
+										subject.hidden
+											? 'bg-gray-300 dark:bg-gray-600'
+											: 'bg-green-500',
+									]}
+								>
+									<span
+										class:list={[
+											'absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform',
+											subject.hidden ? 'left-0.5' : 'left-[22px]',
+										]}
+									/>
+								</span>
+							</button>
+						</li>
+					))
+				}
+			</ul>
+		</main>
+
+		<script>
+			document
+				.querySelectorAll<HTMLButtonElement>('.subject-toggle')
+				.forEach((btn) => {
+					btn.addEventListener('click', async () => {
+						const subjectId = btn.dataset.subjectId!;
+						const wasHidden = btn.dataset.hidden === 'true';
+						const nowHidden = !wasHidden;
+
+						const label = btn.querySelector<HTMLElement>('.subject-label');
+						const track = btn.querySelector<HTMLElement>(':scope > span:last-child');
+
+						btn.dataset.hidden = String(nowHidden);
+						if (label) {
+							label.textContent = nowHidden ? 'Oculta' : 'Visible';
+							label.classList.toggle('text-red-600', nowHidden);
+							label.classList.toggle('dark:text-red-400', nowHidden);
+							label.classList.toggle('text-green-600', !nowHidden);
+							label.classList.toggle('dark:text-green-400', !nowHidden);
+						}
+						if (track) {
+							track.classList.toggle('bg-gray-300', nowHidden);
+							track.classList.toggle('dark:bg-gray-600', nowHidden);
+							track.classList.toggle('bg-green-500', !nowHidden);
+							const knob = track.querySelector<HTMLElement>('span');
+							knob?.classList.toggle('left-0.5', nowHidden);
+							knob?.classList.toggle('left-[22px]', !nowHidden);
+						}
+
+						try {
+							const res = await fetch('/api/subjects/toggle', {
+								method: 'POST',
+								headers: { 'Content-Type': 'application/json' },
+								body: JSON.stringify({
+									subject_id: subjectId,
+									hidden: nowHidden,
+								}),
+							});
+							if (!res.ok) {
+								btn.dataset.hidden = String(wasHidden);
+								location.reload();
+							}
+						} catch {
+							location.reload();
+						}
+					});
+				});
+		</script>
+	</body>
+</html>
