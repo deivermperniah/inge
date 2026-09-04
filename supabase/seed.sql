@@ -2,8 +2,8 @@
 -- Nota: Investigación de Operaciones no tiene tareas por ahora
 -- Ejecutar como admin en el editor SQL de Supabase
 
-insert into public.trayectos (year, active)
-values (2026, true)
+insert into public.trayectos (year, name, active)
+values (2026, 'III', true)
 on conflict (year) do update set active = true;
 
 with t as (select id from public.trayectos where year = 2026)
