@@ -111,7 +111,9 @@ export default function HeaderActions({ userEmail, isAdmin }: Props) {
 						<DropdownMenuContent align="end" className="w-64">
 							<DropdownMenuGroup>
 								<DropdownMenuLabel>Administración</DropdownMenuLabel>
-								<DropdownMenuItem render={<a href="/admin/asignaturas" />}>
+								<DropdownMenuItem
+									onClick={() => document.dispatchEvent(new Event('open-admin-subjects-modal'))}
+								>
 									<Icon icon={ViewIcon} />
 									Visibilidad de asignaturas
 								</DropdownMenuItem>

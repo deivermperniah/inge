@@ -1,0 +1,30 @@
+---
+// Interruptor accesible (role="switch"). El estado visual depende solo de aria-checked,
+// así el JS únicamente tiene que cambiar ese atributo.
+import { cn } from '../lib/utils';
+
+interface Props {
+	checked: boolean;
+	label: string;
+	class?: string;
+	[attr: string]: unknown;
+}
+
+const { checked, label, class: className, ...attrs } = Astro.props;
+---
+
+<button
+	type="button"
+	role="switch"
+	aria-checked={String(checked)}
+	aria-label={label}
+	class={cn(
+		'group inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full bg-input p-0.5 transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring/50 aria-checked:bg-primary disabled:cursor-wait disabled:opacity-60',
+		className,
+	)}
+	{...attrs}
+>
+	<span
+		class="size-5 rounded-full bg-white shadow-sm ring-1 ring-black/5 transition-transform duration-200 group-aria-checked:translate-x-5"
+	></span>
+</button>

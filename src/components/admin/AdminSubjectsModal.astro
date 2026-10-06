@@ -1,0 +1,121 @@
+---
+// Modal de administración: visibilidad global de las asignaturas del trayecto activo.
+import { BookOpen01Icon, InformationCircleIcon } from '@hugeicons/core-free-icons';
+import Modal from '../Modal.astro';
+import Icon from '../Icon.astro';
+import Switch from '../Switch.astro';
+import { Badge } from '../ui/badge';
+
+interface Props {
+	subjects: { id: string; name: string; hidden: boolean }[];
+}
+
+const { subjects } = Astro.props;
+const visibleCount = subjects.filter((s) => !s.hidden).length;
+---
+
+<Modal id="admin-subjects-modal" title="Visibilidad de asignaturas" size="lg">
+	<Fragment slot="header-extra">
+		<Badge variant="secondary" className="tabular-nums">
+			<span><span data-admin-visible-count>{visibleCount}</span>/{subjects.length} visibles</span>
+		</Badge>
+	</Fragment>
+
+	<p class="mb-4 text-sm text-muted-foreground">
+		Las materias ocultas no aparecen en el inicio de ningún usuario.
+	</p>
+
+	{
+		subjects.length === 0 ? (
+			<p class="rounded-xl border border-dashed py-10 text-center text-sm text-muted-foreground">
+				No hay asignaturas en el trayecto activo.
+			</p>
+		) : (
+			<ul class="divide-y overflow-hidden rounded-xl border bg-card">
+				{subjects.map((subject) => (
+					<li
+						class="group flex items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/40"
+						data-admin-subject={subject.id}
+						data-hidden={String(subject.hidden)}
+					>
+						<span class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary transition-colors group-data-[hidden=true]:bg-muted group-data-[hidden=true]:text-muted-foreground">
+							<Icon icon={BookOpen01Icon} size={18} />
+						</span>
+						<span class="min-w-0 flex-1 truncate text-sm font-medium transition-colors group-data-[hidden=true]:text-muted-foreground">
+							{subject.name}
+						</span>
+						<Badge className="bg-success/15 text-success group-data-[hidden=true]:hidden">Visible</Badge>
+						<Badge variant="outline" className="hidden text-muted-foreground group-data-[hidden=true]:inline-flex">
+							Oculta
+						</Badge>
+						<Switch
+							checked={!subject.hidden}
+							label={`Mostrar ${subject.name}`}
+							class="admin-subject-switch"
+						/>
+					</li>
+				))}
+			</ul>
+		)
+	}
+
+	<div slot="footer" class="flex items-center justify-between gap-3 text-xs">
+		<p class="flex items-center gap-2 text-muted-foreground">
+			<Icon icon={InformationCircleIcon} size={14} />
+			Los cambios afectan a todos los usuarios.
+		</p>
+		<p class="hidden text-destructive" data-admin-error>No se pudo guardar el cambio.</p>
+	</div>
+</Modal>
+
+<script>
+	const modal = document.getElementById('admin-subjects-modal') as HTMLDialogElement | null;
+	const countEl = modal?.querySelector('[data-admin-visible-count]');
+	const errorEl = modal?.querySelector<HTMLElement>('[data-admin-error]');
+	let changed = false;
+
+	document.addEventListener('open-admin-subjects-modal', () => modal?.showModal());
+
+	// Recarga al cerrar para que el inicio refleje la nueva visibilidad.
+	modal?.addEventListener('close', () => {
+		if (changed) location.reload();
+	});
+
+	function updateCount() {
+		if (!modal || !countEl) return;
+		const visible = modal.querySelectorAll('[data-admin-subject][data-hidden="false"]').length;
+		countEl.textContent = String(visible);
+	}
+
+	modal?.querySelectorAll<HTMLButtonElement>('.admin-subject-switch').forEach((sw) => {
+		const row = sw.closest<HTMLElement>('[data-admin-subject]')!;
+
+		const render = (hidden: boolean) => {
+			row.dataset.hidden = String(hidden);
+			sw.setAttribute('aria-checked', String(!hidden));
+			updateCount();
+		};
+
+		sw.addEventListener('click', async () => {
+			const nowHidden = row.dataset.hidden !== 'true';
+			render(nowHidden);
+			sw.disabled = true;
+			errorEl?.classList.add('hidden');
+
+			try {
+				const res = await fetch('/api/subjects/toggle', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ subject_id: row.dataset.adminSubject, hidden: nowHidden }),
+				});
+				if (!res.ok) throw new Error(String(res.status));
+				changed = true;
+			} catch {
+				render(!nowHidden);
+				errorEl?.classList.remove('hidden');
+			} finally {
+				sw.disabled = false;
+			}
+		});
+	});
+</script>

@@ -4,6 +4,7 @@ import { createClient } from '../lib/supabase';
 import Header from '../components/Header.astro';
 import SubjectsModal from '../components/SubjectsModal.astro';
 import ScheduleModal from '../components/ScheduleModal.astro';
+import AdminSubjectsModal from '../components/admin/AdminSubjectsModal.astro';
 
 const supabase = createClient(Astro.cookies, Astro.request);
 const {
@@ -48,6 +49,17 @@ const { data: profile } = await supabase
 	.eq('id', user.id)
 	.single();
 
+const isAdmin = profile?.role === 'admin';
+
+// Solo para admins: todas las asignaturas del trayecto, incluidas las ocultas
+const { data: adminSubjects } = isAdmin
+	? await supabase
+			.from('subjects')
+			.select('id, name, hidden')
+			.eq('trayecto_id', trayecto?.id)
+			.order('name')
+	: { data: null };
+
 // Estado por trimestre: none | pending | progress | complete
 function trimStatus(tasks: { id: string; trimestre: number }[], t: number) {
 	const ofTrim = tasks.filter((task) => task.trimestre === t);
@@ -64,7 +76,7 @@ function trimStatus(tasks: { id: string; trimestre: number }[], t: number) {
 		userEmail={user.email ?? ''}
 		totalTasks={visibleSubjects?.reduce((acc, s) => acc + s.tasks.length, 0) ?? 0}
 		doneTasks={doneSet.size}
-		isAdmin={profile?.role === 'admin'}
+		isAdmin={isAdmin}
 	/>
 
 	<main class="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6">
@@ -256,6 +268,7 @@ class:list={[
 
 	<SubjectsModal subjects={subjects ?? []} hidden={hiddenSet} />
 	<ScheduleModal subjects={subjects ?? []} done={doneSet} />
+	{isAdmin && <AdminSubjectsModal subjects={adminSubjects ?? []} />}
 
 	<script>
 		const header = document.querySelector('header[data-total-tasks]');
