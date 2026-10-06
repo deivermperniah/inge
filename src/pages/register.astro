@@ -1,9 +1,8 @@
 ---
-import '../styles/global.css';
+import AppLayout from '../layouts/AppLayout.astro';
 import { createClient } from '../lib/supabase';
-import ThemeScript from '../components/ThemeScript.astro';
 import { Button } from '../components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 
@@ -35,87 +34,91 @@ if (Astro.request.method === 'POST') {
 }
 ---
 
-<html lang="es">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<ThemeScript />
-		<title>Registro</title>
-	</head>
-	<body class="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.18),transparent_35%),linear-gradient(135deg,#f8fafc_0%,#eef2ff_45%,#f8fafc_100%)] dark:bg-[radial-gradient(circle_at_top,_rgba(96,165,250,0.12),transparent_35%),linear-gradient(135deg,#020817_0%,#0f172a_45%,#111827_100%)]">
-		<main class="flex min-h-screen items-center justify-center p-6">
-			<Card className="w-full max-w-md border-0 bg-white/80 shadow-[0_24px_80px_rgba(15,23,42,0.12)] backdrop-blur-xl dark:bg-slate-900/80 dark:shadow-[0_24px_80px_rgba(2,6,23,0.7)]">
-				<CardHeader className="pb-4 text-center">
-					<CardTitle className="text-2xl">Crear cuenta</CardTitle>
-				</CardHeader>
-				<CardContent>
-					{success ? (
-						<div class="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800 dark:border-emerald-900/70 dark:bg-emerald-950/30 dark:text-emerald-300">
-							Revisa tu correo para confirmar tu cuenta.
+<AppLayout title="Crear cuenta">
+	<div
+		aria-hidden="true"
+		class="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(ellipse_100%_75%_at_50%_-20%,color-mix(in_oklch,var(--primary)_22%,transparent),transparent_90%)]"
+	></div>
+	<main class="flex min-h-screen items-center justify-center p-6">
+		<Card className="w-full max-w-md bg-card/85 shadow-xl shadow-primary/5 backdrop-blur-xl">
+			<CardHeader className="pb-2 text-center">
+				<div class="mb-3 flex justify-center">
+					<img src="/logo.png" alt="inge" class="size-14 rounded-2xl bg-white p-2 shadow-sm ring-1 ring-border" />
+				</div>
+				<CardTitle className="text-2xl">Crear cuenta</CardTitle>
+			</CardHeader>
+			<CardContent>
+				{success ? (
+					<div class="rounded-xl border border-success/30 bg-success/10 p-4 text-sm text-success">
+						Revisa tu correo para confirmar tu cuenta.
+					</div>
+				) : (
+					<form method="POST" class="space-y-5">
+						{error && (
+							<p class="rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+								{error}
+							</p>
+						)}
+
+						<div class="space-y-2">
+							<Label for="email">Correo</Label>
+							<Input id="email" name="email" type="email" placeholder="tu@correo.com" required />
 						</div>
-					) : (
-						<form method="POST" class="space-y-5">
-							{error && (
-								<p class="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300">
-									{error}
-								</p>
-							)}
 
-							<div class="space-y-2">
-								<Label for="email">Correo</Label>
-								<Input id="email" name="email" type="email" placeholder="tu@correo.com" required />
+						<div class="space-y-2">
+							<Label for="password">Contraseña</Label>
+							<div class="relative">
+								<Input id="password" name="password" type="password" placeholder="Mínimo 6 caracteres" minlength={6} className="pr-10" required />
+								<button
+									type="button"
+									data-password-toggle
+									aria-controls="password"
+									aria-label="Mostrar contraseña"
+									class="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground transition-colors hover:text-foreground"
+								>
+									<svg data-eye viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
+										<path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z" />
+										<circle cx="12" cy="12" r="3" />
+									</svg>
+									<svg data-eye-off viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="hidden h-4 w-4">
+										<path d="M3 3l18 18" />
+										<path d="M10.58 10.58A2 2 0 0 0 13.42 13.42" />
+										<path d="M9.88 5.08A10.94 10.94 0 0 1 12 5c6.5 0 10 7 10 7a17.4 17.4 0 0 1-3.36 4.53" />
+										<path d="M6.61 6.61A17.6 17.6 0 0 0 2 12s3.5 7 10 7a11.2 11.2 0 0 0 5.38-1.42" />
+									</svg>
+								</button>
 							</div>
+						</div>
 
-							<div class="space-y-2">
-								<Label for="password">Contraseña</Label>
-								<div class="relative">
-									<Input id="password" name="password" type="password" placeholder="Mínimo 6 caracteres" minlength={6} className="pr-10" required />
-									<button
-										type="button"
-										data-password-toggle
-										aria-controls="password"
-										aria-label="Mostrar contraseña"
-										class="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground transition-colors hover:text-foreground"
-									>
-										<svg data-eye viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
-											<path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z" />
-											<circle cx="12" cy="12" r="3" />
-										</svg>
-										<svg data-eye-off viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="hidden h-4 w-4">
-											<path d="M3 3l18 18" />
-											<path d="M10.58 10.58A2 2 0 0 0 13.42 13.42" />
-											<path d="M9.88 5.08A10.94 10.94 0 0 1 12 5c6.5 0 10 7 10 7a17.4 17.4 0 0 1-3.36 4.53" />
-											<path d="M6.61 6.61A17.6 17.6 0 0 0 2 12s3.5 7 10 7a11.2 11.2 0 0 0 5.38-1.42" />
-										</svg>
-									</button>
-								</div>
-							</div>
+						<Button type="submit" className="w-full">Registrarse</Button>
 
-							<Button type="submit" className="w-full">Registrarse</Button>
-						</form>
-					)}
-				</CardContent>
-			</Card>
-		</main>
-		<script is:inline>
-			document.addEventListener('DOMContentLoaded', () => {
-				document.querySelectorAll('[data-password-toggle]').forEach((toggle) => {
-					const input = document.getElementById(toggle.getAttribute('aria-controls') || '');
-					const eye = toggle.querySelector('[data-eye]');
-					const eyeOff = toggle.querySelector('[data-eye-off]');
-					if (!input || !eye || !eyeOff) return;
+						<p class="text-center text-sm text-muted-foreground">
+							¿Ya tienes cuenta?{' '}
+							<a href="/login" class="font-medium text-primary underline-offset-4 hover:underline">
+								Inicia sesión
+							</a>
+						</p>
+					</form>
+				)}
+			</CardContent>
+		</Card>
+	</main>
+	<script is:inline>
+		document.addEventListener('DOMContentLoaded', () => {
+			document.querySelectorAll('[data-password-toggle]').forEach((toggle) => {
+				const input = document.getElementById(toggle.getAttribute('aria-controls') || '');
+				const eye = toggle.querySelector('[data-eye]');
+				const eyeOff = toggle.querySelector('[data-eye-off]');
+				if (!input || !eye || !eyeOff) return;
 
-					toggle.addEventListener('click', () => {
-						const isVisible = input.type === 'text';
-						input.type = isVisible ? 'password' : 'text';
-						toggle.setAttribute('aria-label', isVisible ? 'Mostrar contraseña' : 'Ocultar contraseña');
-						eye.classList.toggle('hidden', !isVisible);
-						eyeOff.classList.toggle('hidden', isVisible);
-					});
+				toggle.addEventListener('click', () => {
+					const isVisible = input.type === 'text';
+					input.type = isVisible ? 'password' : 'text';
+					toggle.setAttribute('aria-label', isVisible ? 'Mostrar contraseña' : 'Ocultar contraseña');
+					eye.classList.toggle('hidden', !isVisible);
+					eyeOff.classList.toggle('hidden', isVisible);
 				});
 			});
-		</script>
-	</body>
-</html>
+		});
+	</script>
+</AppLayout>

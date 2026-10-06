@@ -1,0 +1,49 @@
+---
+// Envoltorio común para <dialog>: cabecera con título y botón cerrar, cuerpo con scroll y pie opcional.
+import { X } from 'lucide-react';
+import { cn } from '../lib/utils';
+
+interface Props {
+	id: string;
+	title: string;
+	size?: 'md' | 'lg' | 'xl';
+	class?: string;
+}
+
+const { id, title, size = 'md', class: className } = Astro.props;
+
+const sizeClass = {
+	md: 'max-w-lg',
+	lg: 'max-w-3xl',
+	xl: 'max-w-4xl',
+}[size];
+---
+
+<dialog id={id} class={cn(sizeClass, className)} aria-labelledby={`${id}-title`}>
+	<div class="flex items-center justify-between gap-4 border-b px-6 py-4">
+		<div class="flex min-w-0 items-center gap-3">
+			<h2 id={`${id}-title`} class="truncate text-base font-semibold tracking-tight">{title}</h2>
+			<slot name="header-extra" />
+		</div>
+		<form method="dialog">
+			<button
+				class="flex size-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+				aria-label="Cerrar"
+			>
+				<X className="size-4" />
+			</button>
+		</form>
+	</div>
+
+	<div class="max-h-[70vh] overflow-y-auto px-6 py-5">
+		<slot />
+	</div>
+
+	{
+		Astro.slots.has('footer') && (
+			<div class="border-t bg-muted/40 px-6 py-3">
+				<slot name="footer" />
+			</div>
+		)
+	}
+</dialog>

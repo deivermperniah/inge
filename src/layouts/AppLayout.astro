@@ -1,0 +1,27 @@
+---
+// Layout base de todas las páginas: <head> común, tema y estilos globales.
+import '../styles/global.css';
+import ThemeScript from '../components/ThemeScript.astro';
+import { cn } from '../lib/utils';
+
+interface Props {
+	title: string;
+	bodyClass?: string;
+}
+
+const { title, bodyClass } = Astro.props;
+---
+
+<html lang="es">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<link rel="icon" href="/favicon.ico" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<ThemeScript />
+		<title>{title} · inge</title>
+	</head>
+	<body class={cn('min-h-screen bg-background text-foreground antialiased', bodyClass)}>
+		<slot />
+	</body>
+</html>

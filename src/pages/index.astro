@@ -1,8 +1,7 @@
 ---
-import '../styles/global.css';
+import AppLayout from '../layouts/AppLayout.astro';
 import { createClient } from '../lib/supabase';
 import Header from '../components/Header.astro';
-import ThemeScript from '../components/ThemeScript.astro';
 import SubjectsModal from '../components/SubjectsModal.astro';
 import ScheduleModal from '../components/ScheduleModal.astro';
 
@@ -60,114 +59,69 @@ function trimStatus(tasks: { id: string; trimestre: number }[], t: number) {
 }
 ---
 
-<html lang="es">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<ThemeScript />
-		<title>Inicio</title>
-	</head>
-	<body class="min-h-screen bg-gray-100 dark:bg-gray-950">
-		<Header
-			userEmail={user.email ?? ''}
-			totalTasks={visibleSubjects?.reduce((acc, s) => acc + s.tasks.length, 0) ?? 0}
-			doneTasks={doneSet.size}
-			isAdmin={profile?.role === 'admin'}
-		/>
+<AppLayout title="Inicio">
+	<Header
+		userEmail={user.email ?? ''}
+		totalTasks={visibleSubjects?.reduce((acc, s) => acc + s.tasks.length, 0) ?? 0}
+		doneTasks={doneSet.size}
+		isAdmin={profile?.role === 'admin'}
+	/>
 
-		<main class="mx-auto w-full max-w-5xl p-6">
-			<div class="mb-6 flex flex-wrap items-center gap-3">
-				<span
-					class="rounded-full bg-white px-4 py-1.5 text-sm text-gray-700 shadow-sm dark:bg-gray-900 dark:text-gray-300"
-				>
-					Trayecto{' '}
-					<strong>{trayecto?.name ?? trayecto?.year}</strong>{trayecto?.name ? ` · ${trayecto?.year}` : ''}
-				</span>
-				<span
-					class="rounded-full bg-white px-4 py-1.5 text-sm text-gray-700 shadow-sm dark:bg-gray-900 dark:text-gray-300"
-				>
-					<strong>{visibleSubjects?.length ?? 0}</strong> asignaturas
-				</span>
-				<span
-					class="rounded-full bg-white px-4 py-1.5 text-sm text-gray-700 shadow-sm dark:bg-gray-900 dark:text-gray-300"
-				>
-					<strong>{visibleSubjects?.reduce((acc, s) => acc + s.tasks.length, 0) ?? 0}</strong>{' '}
-					tareas
-				</span>
-			</div>
+	<main class="mx-auto w-full max-w-5xl p-6">
+		<div class="mb-6 flex flex-wrap items-center gap-3">
+			<span
+				class="rounded-full bg-white px-4 py-1.5 text-sm text-gray-700 shadow-sm dark:bg-gray-900 dark:text-gray-300"
+			>
+				Trayecto{' '}
+				<strong>{trayecto?.name ?? trayecto?.year}</strong>{trayecto?.name ? ` · ${trayecto?.year}` : ''}
+			</span>
+			<span
+				class="rounded-full bg-white px-4 py-1.5 text-sm text-gray-700 shadow-sm dark:bg-gray-900 dark:text-gray-300"
+			>
+				<strong>{visibleSubjects?.length ?? 0}</strong> asignaturas
+			</span>
+			<span
+				class="rounded-full bg-white px-4 py-1.5 text-sm text-gray-700 shadow-sm dark:bg-gray-900 dark:text-gray-300"
+			>
+				<strong>{visibleSubjects?.reduce((acc, s) => acc + s.tasks.length, 0) ?? 0}</strong>{' '}
+				tareas
+			</span>
+		</div>
 
-			<div class="grid gap-4 sm:grid-cols-2">
-				{
-					visibleSubjects?.map((subject) => {
-						const total = subject.tasks.length;
-						const done = subject.tasks.filter((t) => doneSet.has(t.id)).length;
+		<div class="grid gap-4 sm:grid-cols-2">
+			{
+				visibleSubjects?.map((subject) => {
+					const total = subject.tasks.length;
+					const done = subject.tasks.filter((t) => doneSet.has(t.id)).length;
 
-						return (
-							<button
-								data-subject={subject.id}
-								class="open-modal flex flex-col gap-3 rounded-lg bg-white p-5 text-left shadow-sm transition hover:shadow-md dark:bg-gray-900 dark:text-gray-100"
-							>
-								<div class="flex items-start justify-between gap-2">
-									<h2 class="font-semibold">{subject.name}</h2>
-									<span class="text-gray-400 dark:text-gray-600" aria-hidden="true">
-										›
-									</span>
-								</div>
-
-								<div class="flex items-center justify-between">
-									<span
-										class="card-count text-sm text-gray-500 dark:text-gray-400"
-										data-subject={subject.id}
-									>
-										{done}/{total}
-									</span>
-									<div class="flex gap-1.5">
-										{[1, 2, 3].map((t) => {
-											const status = trimStatus(subject.tasks, t);
-											return (
-												<span
-													class="trim-dot h-2.5 w-2.5 rounded-full"
-													data-subject={subject.id}
-													data-trim={t}
-class:list={[
-													status === 'none' && 'bg-gray-200 dark:bg-gray-700',
-													status === 'pending' && 'bg-red-400',
-													status === 'progress' && 'bg-amber-400',
-													status === 'complete' && 'bg-green-500',
-												]}
-												title={`Trimestre ${t}`}
-											/>
-										);
-									})}
-								</div>
+					return (
+						<button
+							data-subject={subject.id}
+							class="open-modal flex flex-col gap-3 rounded-lg bg-white p-5 text-left shadow-sm transition hover:shadow-md dark:bg-gray-900 dark:text-gray-100"
+						>
+							<div class="flex items-start justify-between gap-2">
+								<h2 class="font-semibold">{subject.name}</h2>
+								<span class="text-gray-400 dark:text-gray-600" aria-hidden="true">
+									›
+								</span>
 							</div>
-						</button>
-						);
-					})
-				}
-			</div>
-		</main>
 
-		{
-			visibleSubjects?.map((subject) => (
-				<dialog
-					id={`modal-${subject.id}`}
-					class="m-auto w-full max-w-lg rounded-lg p-0 text-gray-900 backdrop:bg-black/50 dark:bg-gray-900 dark:text-gray-100 dark:backdrop:bg-black/70"
-				>
-					<div class="flex items-center justify-between border-b border-gray-200 px-6 py-4 dark:border-gray-700">
-						<div class="flex items-center gap-3">
-							<h3 class="font-semibold">{subject.name}</h3>
-							<div class="flex gap-1.5">
-								{[1, 2, 3].map((t) => {
-									const status = trimStatus(subject.tasks, t);
-									return (
-										<span
-											class="trim-dot h-2.5 w-2.5 rounded-full"
-											data-subject={subject.id}
-											data-trim={t}
-											class:list={[
+							<div class="flex items-center justify-between">
+								<span
+									class="card-count text-sm text-gray-500 dark:text-gray-400"
+									data-subject={subject.id}
+								>
+									{done}/{total}
+								</span>
+								<div class="flex gap-1.5">
+									{[1, 2, 3].map((t) => {
+										const status = trimStatus(subject.tasks, t);
+										return (
+											<span
+												class="trim-dot h-2.5 w-2.5 rounded-full"
+												data-subject={subject.id}
+												data-trim={t}
+class:list={[
 												status === 'none' && 'bg-gray-200 dark:bg-gray-700',
 												status === 'pending' && 'bg-red-400',
 												status === 'progress' && 'bg-amber-400',
@@ -179,250 +133,285 @@ class:list={[
 								})}
 							</div>
 						</div>
-						<form method="dialog">
-							<button
-								class="rounded p-1 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
-								aria-label="Cerrar"
-							>
-								✕
-							</button>
-						</form>
-					</div>
+					</button>
+					);
+				})
+			}
+		</div>
+	</main>
 
-					<div class="max-h-96 overflow-y-auto px-6 py-4">
-						{subject.tasks.length === 0 ? (
-							<p class="py-4 text-center text-sm text-gray-500 dark:text-gray-400">
-								Ninguna tarea aún
-							</p>
-						) : (
-							[1, 2, 3].map((t) => {
-								const tasks = subject.tasks.filter((task) => task.trimestre === t);
-								if (tasks.length === 0) return null;
-
+	{
+		visibleSubjects?.map((subject) => (
+			<dialog
+				id={`modal-${subject.id}`}
+				class="m-auto w-full max-w-lg rounded-lg p-0 text-gray-900 backdrop:bg-black/50 dark:bg-gray-900 dark:text-gray-100 dark:backdrop:bg-black/70"
+			>
+				<div class="flex items-center justify-between border-b border-gray-200 px-6 py-4 dark:border-gray-700">
+					<div class="flex items-center gap-3">
+						<h3 class="font-semibold">{subject.name}</h3>
+						<div class="flex gap-1.5">
+							{[1, 2, 3].map((t) => {
+								const status = trimStatus(subject.tasks, t);
 								return (
-									<div class="mb-4 last:mb-0">
-										<h4 class="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-											Trimestre {t}
-										</h4>
-										<ul class="flex flex-col gap-2">
-											{tasks.map((task) => {
-												const done = doneSet.has(task.id);
-												return (
-													<li>
-														<button
-															type="button"
-															class="task-check group flex w-full items-center gap-3 rounded px-1 py-0.5 text-left hover:bg-gray-50 dark:hover:bg-gray-800"
-														data-task-id={task.id}
-														data-subject={subject.id}
-														data-trim={task.trimestre}
-														aria-pressed={done}
-														>
-															<span
-																class:list={[
-																	'task-dot flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors',
-																	done
-																		? 'border-green-600 bg-green-600'
-																		: 'border-gray-300 bg-white group-hover:border-gray-400 dark:border-gray-600 dark:bg-gray-800',
-																]}
-															>
-																<svg
-																	class:list={[
-																		'transition-opacity',
-																		done ? 'opacity-100' : 'opacity-0',
-																	]}
-																	viewBox="0 0 12 12"
-																	fill="none"
-																	stroke="white"
-																	stroke-width="2"
-																	stroke-linecap="round"
-																	stroke-linejoin="round"
-																>
-																	<path d="M2 6.5 L5 9.5 L10 3" />
-																</svg>
-															</span>
-<span
+									<span
+										class="trim-dot h-2.5 w-2.5 rounded-full"
+										data-subject={subject.id}
+										data-trim={t}
+										class:list={[
+											status === 'none' && 'bg-gray-200 dark:bg-gray-700',
+											status === 'pending' && 'bg-red-400',
+											status === 'progress' && 'bg-amber-400',
+											status === 'complete' && 'bg-green-500',
+										]}
+										title={`Trimestre ${t}`}
+									/>
+								);
+							})}
+						</div>
+					</div>
+					<form method="dialog">
+						<button
+							class="rounded p-1 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
+							aria-label="Cerrar"
+						>
+							✕
+						</button>
+					</form>
+				</div>
+
+				<div class="max-h-96 overflow-y-auto px-6 py-4">
+					{subject.tasks.length === 0 ? (
+						<p class="py-4 text-center text-sm text-gray-500 dark:text-gray-400">
+							Ninguna tarea aún
+						</p>
+					) : (
+						[1, 2, 3].map((t) => {
+							const tasks = subject.tasks.filter((task) => task.trimestre === t);
+							if (tasks.length === 0) return null;
+
+							return (
+								<div class="mb-4 last:mb-0">
+									<h4 class="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+										Trimestre {t}
+									</h4>
+									<ul class="flex flex-col gap-2">
+										{tasks.map((task) => {
+											const done = doneSet.has(task.id);
+											return (
+												<li>
+													<button
+														type="button"
+														class="task-check group flex w-full items-center gap-3 rounded px-1 py-0.5 text-left hover:bg-gray-50 dark:hover:bg-gray-800"
+													data-task-id={task.id}
+													data-subject={subject.id}
+													data-trim={task.trimestre}
+													aria-pressed={done}
+													>
+														<span
 															class:list={[
-																'task-text text-sm transition-colors',
+																'task-dot flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors',
 																done
-																	? 'text-gray-400 line-through dark:text-gray-500'
-																	: 'text-gray-900 dark:text-gray-200',
+																	? 'border-green-600 bg-green-600'
+																	: 'border-gray-300 bg-white group-hover:border-gray-400 dark:border-gray-600 dark:bg-gray-800',
 															]}
 														>
-																{task.text}
-															</span>
-														</button>
-													</li>
-												);
-											})}
-										</ul>
-									</div>
-								);
-							})
-						)}
-					</div>
-				</dialog>
-			))
-		}
+															<svg
+																class:list={[
+																	'transition-opacity',
+																	done ? 'opacity-100' : 'opacity-0',
+																]}
+																viewBox="0 0 12 12"
+																fill="none"
+																stroke="white"
+																stroke-width="2"
+																stroke-linecap="round"
+																stroke-linejoin="round"
+															>
+																<path d="M2 6.5 L5 9.5 L10 3" />
+															</svg>
+														</span>
+<span
+														class:list={[
+															'task-text text-sm transition-colors',
+															done
+																? 'text-gray-400 line-through dark:text-gray-500'
+																: 'text-gray-900 dark:text-gray-200',
+														]}
+													>
+															{task.text}
+														</span>
+													</button>
+												</li>
+											);
+										})}
+									</ul>
+								</div>
+							);
+						})
+					)}
+				</div>
+			</dialog>
+		))
+	}
 
-		<SubjectsModal subjects={subjects ?? []} hidden={hiddenSet} />
-		<ScheduleModal subjects={subjects ?? []} done={doneSet} />
+	<SubjectsModal subjects={subjects ?? []} hidden={hiddenSet} />
+	<ScheduleModal subjects={subjects ?? []} done={doneSet} />
 
-		<script>
-			const header = document.querySelector('header[data-total-tasks]');
-			const hdrProg = document.getElementById('hdr-prog');
-			const hdrDone = document.getElementById('hdr-done');
-			const hdrPending = document.getElementById('hdr-pending');
+	<script>
+		const header = document.querySelector('header[data-total-tasks]');
+		const hdrProg = document.getElementById('hdr-prog');
+		const hdrDone = document.getElementById('hdr-done');
+		const hdrPending = document.getElementById('hdr-pending');
 
-			// Estado global: taskId -> done
-			const state = new Map<string, boolean>();
+		// Estado global: taskId -> done
+		const state = new Map<string, boolean>();
+		document
+			.querySelectorAll<HTMLButtonElement>('.task-check')
+			.forEach((btn) => {
+				state.set(btn.dataset.taskId!, btn.getAttribute('aria-pressed') === 'true');
+			});
+
+		function recomputeAll() {
+			// Header global
+			let done = 0;
+			for (const d of state.values()) if (d) done++;
+			const total = state.size;
+			const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+			if (hdrProg) hdrProg.style.width = `${pct}%`;
+			if (hdrDone) hdrDone.textContent = String(done);
+			if (hdrPending) hdrPending.textContent = String(total - done);
+
+			// Cards por asignatura
+			const bySubject = new Map<string, HTMLButtonElement[]>();
 			document
 				.querySelectorAll<HTMLButtonElement>('.task-check')
 				.forEach((btn) => {
-					state.set(btn.dataset.taskId!, btn.getAttribute('aria-pressed') === 'true');
+					const subj = btn.dataset.subject!;
+					if (!bySubject.has(subj)) bySubject.set(subj, []);
+					bySubject.get(subj)!.push(btn);
 				});
 
-			function recomputeAll() {
-				// Header global
-				let done = 0;
-				for (const d of state.values()) if (d) done++;
-				const total = state.size;
-				const pct = total > 0 ? Math.round((done / total) * 100) : 0;
-				if (hdrProg) hdrProg.style.width = `${pct}%`;
-				if (hdrDone) hdrDone.textContent = String(done);
-				if (hdrPending) hdrPending.textContent = String(total - done);
+			for (const [subj, btns] of bySubject) {
+				const totalS = btns.length;
+				const doneS = btns.filter((b) => state.get(b.dataset.taskId!)).length;
 
-				// Cards por asignatura
-				const bySubject = new Map<string, HTMLButtonElement[]>();
 				document
-					.querySelectorAll<HTMLButtonElement>('.task-check')
-					.forEach((btn) => {
-						const subj = btn.dataset.subject!;
-						if (!bySubject.has(subj)) bySubject.set(subj, []);
-						bySubject.get(subj)!.push(btn);
+					.querySelectorAll(`[data-subject="${subj}"].card-count`)
+					.forEach((el) => {
+						el.textContent = `${doneS}/${totalS}`;
 					});
 
-				for (const [subj, btns] of bySubject) {
-					const totalS = btns.length;
-					const doneS = btns.filter((b) => state.get(b.dataset.taskId!)).length;
-
-					document
-						.querySelectorAll(`[data-subject="${subj}"].card-count`)
-						.forEach((el) => {
-							el.textContent = `${doneS}/${totalS}`;
-						});
-
-					[1, 2, 3].forEach((t) => {
-						const inTrim = btns.filter((b) => Number(b.dataset.trim) === t);
-						let dotCls = 'bg-gray-200 dark:bg-gray-700';
-						let cellCls = '';
-						if (inTrim.length > 0) {
-							const doneCount = inTrim.filter(
-								(b) => state.get(b.dataset.taskId!),
-							).length;
-							if (doneCount === 0) {
-								dotCls = 'bg-red-400';
-								cellCls = 'bg-red-400';
-							} else if (doneCount === inTrim.length) {
-								dotCls = 'bg-green-500';
-								cellCls = 'bg-green-500';
-							} else {
-								dotCls = 'bg-amber-400';
-								cellCls = 'bg-amber-400';
-							}
+				[1, 2, 3].forEach((t) => {
+					const inTrim = btns.filter((b) => Number(b.dataset.trim) === t);
+					let dotCls = 'bg-gray-200 dark:bg-gray-700';
+					let cellCls = '';
+					if (inTrim.length > 0) {
+						const doneCount = inTrim.filter(
+							(b) => state.get(b.dataset.taskId!),
+						).length;
+						if (doneCount === 0) {
+							dotCls = 'bg-red-400';
+							cellCls = 'bg-red-400';
+						} else if (doneCount === inTrim.length) {
+							dotCls = 'bg-green-500';
+							cellCls = 'bg-green-500';
+						} else {
+							dotCls = 'bg-amber-400';
+							cellCls = 'bg-amber-400';
 						}
-						document
-							.querySelectorAll(
-								`.trim-dot[data-subject="${subj}"][data-trim="${t}"]`,
-							)
-							.forEach((dot) => {
-								dot.className = `trim-dot h-2.5 w-2.5 rounded-full ${dotCls}`;
-							});
-						document
-							.querySelectorAll(
-								`.schedule-cell[data-subject="${subj}"][data-trim="${t}"]`,
-							)
-							.forEach((cell) => {
-								cell.className = `schedule-cell border-r border-gray-200 px-3 py-2 last:border-r-0 dark:border-gray-700 ${cellCls}`;
-							});
-					});
-				}
+					}
+					document
+						.querySelectorAll(
+							`.trim-dot[data-subject="${subj}"][data-trim="${t}"]`,
+						)
+						.forEach((dot) => {
+							dot.className = `trim-dot h-2.5 w-2.5 rounded-full ${dotCls}`;
+						});
+					document
+						.querySelectorAll(
+							`.schedule-cell[data-subject="${subj}"][data-trim="${t}"]`,
+						)
+						.forEach((cell) => {
+							cell.className = `schedule-cell border-r border-gray-200 px-3 py-2 last:border-r-0 dark:border-gray-700 ${cellCls}`;
+						});
+				});
 			}
+		}
 
-			function setDone(taskId: string, done: boolean) {
-				state.set(taskId, done);
-				document
-					.querySelectorAll<HTMLButtonElement>(`[data-task-id="${taskId}"]`)
-					.forEach((btn) => {
-						btn.setAttribute('aria-pressed', String(done));
-						const dot = btn.querySelector('.task-dot');
-						if (dot) {
-							// Limpiar todas las variantes de fondo y borde
-							dot.classList.remove(
+		function setDone(taskId: string, done: boolean) {
+			state.set(taskId, done);
+			document
+				.querySelectorAll<HTMLButtonElement>(`[data-task-id="${taskId}"]`)
+				.forEach((btn) => {
+					btn.setAttribute('aria-pressed', String(done));
+					const dot = btn.querySelector('.task-dot');
+					if (dot) {
+						// Limpiar todas las variantes de fondo y borde
+						dot.classList.remove(
+							'bg-white',
+							'bg-green-600',
+							'border-gray-300',
+							'border-gray-400',
+							'border-green-600',
+							'dark:bg-gray-800',
+							'dark:border-gray-600',
+						);
+						if (done) {
+							dot.classList.add('bg-green-600', 'border-green-600');
+						} else {
+							dot.classList.add(
 								'bg-white',
-								'bg-green-600',
 								'border-gray-300',
-								'border-gray-400',
-								'border-green-600',
 								'dark:bg-gray-800',
 								'dark:border-gray-600',
 							);
-							if (done) {
-								dot.classList.add('bg-green-600', 'border-green-600');
-							} else {
-								dot.classList.add(
-									'bg-white',
-									'border-gray-300',
-									'dark:bg-gray-800',
-									'dark:border-gray-600',
-								);
-							}
 						}
-						btn.querySelector('.task-dot svg')?.classList.toggle('opacity-100', done);
-						btn.querySelector('.task-dot svg')?.classList.toggle('opacity-0', !done);
-						const taskText = btn.querySelector('.task-text');
-						if (taskText) {
-							taskText.classList.toggle('line-through', done);
-							taskText.classList.toggle('text-gray-400', done);
-							taskText.classList.toggle('dark:text-gray-500', done);
-							taskText.classList.toggle('text-gray-900', !done);
-							taskText.classList.toggle('dark:text-gray-200', !done);
-						}
-					});
-				recomputeAll();
-			}
-
-			async function toggleTask(btn: HTMLButtonElement) {
-				const taskId = btn.dataset.taskId!;
-				const nowDone = !state.get(taskId);
-				setDone(taskId, nowDone);
-
-				try {
-					const res = await fetch('/api/tasks/toggle', {
-						method: 'POST',
-						headers: { 'Content-Type': 'application/json' },
-						body: JSON.stringify({ task_id: taskId, done: nowDone }),
-					});
-					if (!res.ok) setDone(taskId, !nowDone);
-				} catch {
-					setDone(taskId, !nowDone);
-				}
-			}
-
-			document
-				.querySelectorAll<HTMLButtonElement>('.open-modal')
-				.forEach((btn) => {
-					btn.addEventListener('click', () => {
-						const id = btn.dataset.subject;
-						const modal = document.getElementById(`modal-${id}`) as HTMLDialogElement;
-						modal?.showModal();
-					});
+					}
+					btn.querySelector('.task-dot svg')?.classList.toggle('opacity-100', done);
+					btn.querySelector('.task-dot svg')?.classList.toggle('opacity-0', !done);
+					const taskText = btn.querySelector('.task-text');
+					if (taskText) {
+						taskText.classList.toggle('line-through', done);
+						taskText.classList.toggle('text-gray-400', done);
+						taskText.classList.toggle('dark:text-gray-500', done);
+						taskText.classList.toggle('text-gray-900', !done);
+						taskText.classList.toggle('dark:text-gray-200', !done);
+					}
 				});
+			recomputeAll();
+		}
 
-			document
-				.querySelectorAll<HTMLButtonElement>('.task-check')
-				.forEach((btn) => {
-					btn.addEventListener('click', () => toggleTask(btn));
+		async function toggleTask(btn: HTMLButtonElement) {
+			const taskId = btn.dataset.taskId!;
+			const nowDone = !state.get(taskId);
+			setDone(taskId, nowDone);
+
+			try {
+				const res = await fetch('/api/tasks/toggle', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ task_id: taskId, done: nowDone }),
 				});
-		</script>
-	</body>
-</html>
+				if (!res.ok) setDone(taskId, !nowDone);
+			} catch {
+				setDone(taskId, !nowDone);
+			}
+		}
+
+		document
+			.querySelectorAll<HTMLButtonElement>('.open-modal')
+			.forEach((btn) => {
+				btn.addEventListener('click', () => {
+					const id = btn.dataset.subject;
+					const modal = document.getElementById(`modal-${id}`) as HTMLDialogElement;
+					modal?.showModal();
+				});
+			});
+
+		document
+			.querySelectorAll<HTMLButtonElement>('.task-check')
+			.forEach((btn) => {
+				btn.addEventListener('click', () => toggleTask(btn));
+			});
+	</script>
+</AppLayout>
