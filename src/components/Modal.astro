@@ -1,6 +1,7 @@
 ---
 // Envoltorio común para <dialog>: cabecera con título y botón cerrar, cuerpo con scroll y pie opcional.
-import { X } from 'lucide-react';
+import { Cancel01Icon } from '@hugeicons/core-free-icons';
+import Icon from './Icon.astro';
 import { cn } from '../lib/utils';
 
 interface Props {
@@ -30,7 +31,7 @@ const sizeClass = {
 				class="flex size-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
 				aria-label="Cerrar"
 			>
-				<X className="size-4" />
+				<Icon icon={Cancel01Icon} size={16} />
 			</button>
 		</form>
 	</div>

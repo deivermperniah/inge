@@ -1,0 +1,16 @@
+---
+// Ícono de Hugeicons renderizado en el servidor (sin JS en el cliente).
+import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react';
+
+interface Props {
+	icon: IconSvgElement;
+	size?: number;
+	strokeWidth?: number;
+	class?: string;
+	[attr: string]: unknown;
+}
+
+const { icon, size = 18, strokeWidth = 1.8, class: className, ...attrs } = Astro.props;
+---
+
+<HugeiconsIcon icon={icon} size={size} strokeWidth={strokeWidth} className={className} aria-hidden="true" {...attrs} />
