@@ -188,6 +188,7 @@ function SubjectCard({
 			await onDeleteTask(task.id);
 		} catch (err) {
 			setError(err instanceof Error ? err.message : 'Error');
+		} finally {
 			setPending(null);
 		}
 	}
@@ -419,7 +420,7 @@ export default function AdminManagePanel({ subjects: initial }: Props) {
 			trimestre,
 		});
 		setSubjects((prev) =>
-			prev.map((s) => (s.id === subjectId ? { ...s, tasks: [...s.tasks, task] } : s)),
+			prev.map((s) => (s.id === subjectId ? { ...s, tasks: [task, ...s.tasks] } : s)),
 		);
 		notifyChanged();
 	}
