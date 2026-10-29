@@ -23,7 +23,7 @@ const pct = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0;
 			href="/"
 			class="flex items-center gap-2.5 rounded-xl outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
 		>
-			<img src="/logo.png" alt="" class="size-8 rounded-lg bg-white p-1 ring-1 ring-border" />
+			<img src="/logo.png" alt="" class="size-8" />
 			<span class="text-lg font-semibold tracking-tight">inge</span>
 		</a>
 
@@ -35,7 +35,7 @@ const pct = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0;
 			<div class="absolute inset-x-0 -bottom-px h-0.5" aria-hidden="true">
 				<div
 					id="hdr-prog"
-					class="h-full bg-linear-to-r from-primary/70 to-primary transition-[width] duration-500 ease-out"
+					class="h-full bg-primary transition-[width] duration-500 ease-out"
 					style={`width: ${pct}%`}
 				/>
 			</div>

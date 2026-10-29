@@ -149,7 +149,7 @@
 
     /* Modales nativos: entrada/salida con fade + escala */
     dialog {
-        @apply m-auto w-[calc(100%-2rem)] rounded-2xl border bg-popover p-0 text-popover-foreground shadow-2xl;
+        @apply m-auto w-[calc(100%-2rem)] rounded-xl border bg-popover p-0 text-popover-foreground shadow-2xl;
         opacity: 0;
         scale: 0.96;
         transition:

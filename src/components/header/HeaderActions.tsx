@@ -132,7 +132,7 @@ export default function HeaderActions({ userEmail, isAdmin }: Props) {
 				)}
 
 				<IconAction
-					label="Mis materias"
+					label="Mis asignaturas"
 					icon={BookOpen01Icon}
 					onClick={() => document.dispatchEvent(new Event('open-subjects-modal'))}
 				/>
@@ -191,7 +191,6 @@ export default function HeaderActions({ userEmail, isAdmin }: Props) {
 									</AvatarFallback>
 								</Avatar>
 								<div className="min-w-0">
-									<p className="text-xs text-muted-foreground">Sesión iniciada como</p>
 									<p className="truncate text-sm font-medium">{userEmail}</p>
 								</div>
 							</DropdownMenuLabel>

@@ -6,7 +6,7 @@ import { cn } from '../lib/utils';
 
 interface Props {
 	id: string;
-	title: string;
+	title?: string;
 	size?: 'md' | 'lg' | 'xl';
 	class?: string;
 }
@@ -20,29 +20,33 @@ const sizeClass = {
 }[size];
 ---
 
-<dialog id={id} class={cn(sizeClass, className)} aria-labelledby={`${id}-title`}>
-	<div class="flex items-center justify-between gap-4 border-b px-6 py-4">
-		<div class="flex min-w-0 items-center gap-3">
-			<h2 id={`${id}-title`} class="truncate text-base font-semibold tracking-tight">{title}</h2>
-			<slot name="header-extra" />
+<dialog id={id} class={cn(sizeClass, className)} aria-labelledby={title ? `${id}-title` : undefined}>
+	<div class="flex items-center justify-between gap-4 border-b px-5 py-3.5">
+		<div class="min-w-0">
+			{title && (
+				<h2 id={`${id}-title`} class="truncate text-base font-semibold tracking-tight">{title}</h2>
+			)}
 		</div>
-		<form method="dialog">
-			<button
-				class="flex size-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
-				aria-label="Cerrar"
-			>
-				<Icon icon={Cancel01Icon} size={16} />
-			</button>
-		</form>
+		<div class="flex shrink-0 items-center gap-2">
+			<slot name="header-extra" />
+			<form method="dialog">
+				<button
+					class="flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+					aria-label="Cerrar"
+				>
+					<Icon icon={Cancel01Icon} size={15} />
+				</button>
+			</form>
+		</div>
 	</div>
 
-	<div class="max-h-[70vh] overflow-y-auto px-6 py-5">
+	<div class="max-h-[70vh] overflow-y-auto px-5 py-4">
 		<slot />
 	</div>
 
 	{
 		Astro.slots.has('footer') && (
-			<div class="border-t bg-muted/40 px-6 py-3">
+			<div class="border-t bg-muted/30 px-5 py-3">
 				<slot name="footer" />
 			</div>
 		)

@@ -1,4 +1,9 @@
 ---
+import Modal from './Modal.astro';
+import Icon from './Icon.astro';
+import Switch from './Switch.astro';
+import { BookOpen01Icon } from '@hugeicons/core-free-icons';
+
 interface Props {
 	subjects: { id: string; name: string }[];
 	hidden: Set<string>;
@@ -7,70 +12,40 @@ interface Props {
 const { subjects, hidden } = Astro.props;
 ---
 
-<dialog
-	id="subjects-modal"
-	class="m-auto w-full max-w-3xl rounded-lg p-0 text-gray-900 backdrop:bg-black/50 dark:bg-gray-900 dark:text-gray-100 dark:backdrop:bg-black/70"
->
-	<div class="flex items-center justify-between border-b border-gray-200 px-6 py-4 dark:border-gray-700">
-		<h3 class="font-semibold">Mis materias</h3>
-		<form method="dialog">
-			<button
-				class="rounded p-1 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
-				aria-label="Cerrar"
-			>
-				✕
-			</button>
-		</form>
-	</div>
-
-	<p class="px-6 pt-4 text-sm text-gray-500 dark:text-gray-400">
-		Oculta las materias que no quieres ver en tu inicio. Es solo para ti.
+<Modal id="subjects-modal" title="Mis asignaturas" size="lg">
+	<p class="mb-4 text-sm text-muted-foreground">
+		Oculta las asignaturas que no quieres ver en tu inicio.
 	</p>
 
-	<div class="max-h-96 overflow-y-auto px-6 py-4">
-		<ul class="grid grid-cols-1 gap-2 sm:grid-cols-2">
-			{
-				subjects?.map((subject) => {
+	{
+		subjects.length === 0 ? (
+			<p class="rounded-lg border border-dashed py-10 text-center text-sm text-muted-foreground">
+				No hay asignaturas en el trayecto activo.
+			</p>
+		) : (
+			<ul class="divide-y overflow-hidden rounded-lg border bg-card">
+				{subjects.map((subject) => {
 					const isHidden = hidden.has(subject.id);
 					return (
-						<li class="flex min-h-14 items-center justify-between gap-3 rounded-lg border border-gray-200 bg-white px-3 py-2.5 transition hover:border-gray-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-800 dark:hover:border-gray-600">
-<span
-							class:list={[
-								'truncate font-medium dark:text-gray-100',
-								isHidden && 'text-gray-400 line-through dark:text-gray-500',
-							]}
+						<li
+							class="group/row flex items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/40"
+							data-subject-id={subject.id}
+							data-hidden={String(isHidden)}
 						>
+							<span class="shrink-0 text-muted-foreground transition-opacity group-data-[hidden=true]/row:opacity-50">
+								<Icon icon={BookOpen01Icon} size={16} />
+							</span>
+							<span class="min-w-0 flex-1 truncate text-sm font-medium transition-colors group-data-[hidden=true]/row:text-muted-foreground group-data-[hidden=true]/row:line-through">
 								{subject.name}
 							</span>
-							<button
-								type="button"
-								class="subject-toggle rounded px-2 py-1.5"
-								data-subject-id={subject.id}
-								data-hidden={String(isHidden)}
-							>
-								<span
-									class:list={[
-										'relative inline-block h-6 w-11 rounded-full transition-colors',
-										isHidden
-											? 'bg-gray-300 dark:bg-gray-600'
-											: 'bg-green-500',
-									]}
-								>
-									<span
-										class:list={[
-											'absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform',
-											isHidden ? 'left-0.5' : 'left-[22px]',
-										]}
-									/>
-								</span>
-							</button>
+							<Switch checked={!isHidden} label={`Mostrar ${subject.name}`} class="subject-switch" />
 						</li>
 					);
-				})
-			}
-		</ul>
-	</div>
-</dialog>
+				})}
+			</ul>
+		)
+	}
+</Modal>
 
 <script>
 	document.addEventListener('open-subjects-modal', () => {
@@ -78,48 +53,32 @@ const { subjects, hidden } = Astro.props;
 		modal?.showModal();
 	});
 
-	document
-		.querySelectorAll<HTMLButtonElement>('.subject-toggle')
-		.forEach((btn) => {
-			btn.addEventListener('click', async () => {
-				const subjectId = btn.dataset.subjectId!;
-				const wasHidden = btn.dataset.hidden === 'true';
-				const nowHidden = !wasHidden;
+	document.querySelectorAll<HTMLButtonElement>('.subject-switch').forEach((sw) => {
+		const row = sw.closest<HTMLElement>('[data-subject-id]')!;
 
-				const li = btn.closest('li');
-				const nameEl = li?.querySelector<HTMLElement>(':scope > span');
-				const track = btn.querySelector<HTMLElement>(':scope > span:last-child');
+		sw.addEventListener('click', async () => {
+			const wasHidden = row.dataset.hidden === 'true';
+			const nowHidden = !wasHidden;
 
-				btn.dataset.hidden = String(nowHidden);
-				if (nameEl) {
-					nameEl.classList.toggle('text-gray-400', nowHidden);
-					nameEl.classList.toggle('dark:text-gray-500', nowHidden);
-					nameEl.classList.toggle('line-through', nowHidden);
-				}
-				if (track) {
-					track.classList.toggle('bg-gray-300', nowHidden);
-					track.classList.toggle('dark:bg-gray-600', nowHidden);
-					track.classList.toggle('bg-green-500', !nowHidden);
-					const knob = track.querySelector<HTMLElement>('span');
-					knob?.classList.toggle('left-0.5', nowHidden);
-					knob?.classList.toggle('left-[22px]', !nowHidden);
-				}
+			row.dataset.hidden = String(nowHidden);
+			sw.setAttribute('aria-checked', String(!nowHidden));
+			sw.disabled = true;
+			sw.setAttribute('aria-busy', 'true');
 
-				try {
-					const res = await fetch('/api/subjects/personal-toggle', {
-						method: 'POST',
-						headers: { 'Content-Type': 'application/json' },
-						body: JSON.stringify({
-							subject_id: subjectId,
-							hidden: nowHidden,
-						}),
-					});
-					if (!res.ok) {
-						btn.dataset.hidden = String(wasHidden);
-					}
-				} catch {
-					btn.dataset.hidden = String(wasHidden);
-				}
-			});
+			try {
+				const res = await fetch('/api/subjects/personal-toggle', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ subject_id: row.dataset.subjectId, hidden: nowHidden }),
+				});
+				if (!res.ok) throw new Error(String(res.status));
+			} catch {
+				row.dataset.hidden = String(wasHidden);
+				sw.setAttribute('aria-checked', String(!wasHidden));
+			} finally {
+				sw.disabled = false;
+				sw.removeAttribute('aria-busy');
+			}
 		});
+	});
 </script>
