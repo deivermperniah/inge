@@ -2,6 +2,15 @@
 
 Seguimiento de tareas por asignatura y trimestre para el trayecto activo: cada estudiante marca sus tareas como hechas y ve su progreso general, por materia y por trimestre.
 
+🔗 Demo: https://inge-iunav.vercel.app/
+
+## Qué se puede hacer
+
+- **Marcar tareas** como hechas por asignatura y trimestre.
+- **Ver el progreso** general, por materia y por trimestre.
+- **Consultar el horario** del trayecto activo.
+- **Administrar materias** y su visibilidad desde el panel de admin.
+
 ## Stack
 
 - Astro 7 en modo servidor (`@astrojs/node`).
