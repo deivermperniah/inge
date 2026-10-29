@@ -261,7 +261,7 @@ function SubjectCard({
 				{TRIMESTRES.map((trimestre) => {
 					const tasks = subject.tasks
 						.filter((task) => task.trimestre === trimestre)
-						.sort((a, b) => a.text.localeCompare(b.text));
+						.reverse();
 
 					return (
 						<div key={trimestre} className="flex flex-col px-2.5 py-2">

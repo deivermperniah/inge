@@ -175,7 +175,7 @@ const totalTasks = visibleSubjects?.reduce((acc, s) => acc + s.tasks.length, 0) 
 					<p class="py-6 text-center text-sm text-muted-foreground">Ninguna tarea aún</p>
 				) : (
 					[1, 2, 3].map((t) => {
-						const tasks = subject.tasks.filter((task) => task.trimestre === t);
+						const tasks = subject.tasks.filter((task) => task.trimestre === t).reverse();
 						if (tasks.length === 0) return null;
 
 						return (
