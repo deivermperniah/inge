@@ -13,7 +13,7 @@ import {
 	UserGroupIcon,
 	ViewIcon,
 } from '@hugeicons/core-free-icons';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarBadge, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -42,7 +42,6 @@ const THEMES: { value: Theme; label: string; icon: IconSvgElement }[] = [
 ];
 
 const ADMIN_SOON: { label: string; icon: IconSvgElement }[] = [
-	{ label: 'Materias y tareas', icon: LibrariesIcon },
 	{ label: 'Usuarios', icon: UserGroupIcon },
 	{ label: 'Roles', icon: Key01Icon },
 ];
@@ -112,6 +111,12 @@ export default function HeaderActions({ userEmail, isAdmin }: Props) {
 							<DropdownMenuGroup>
 								<DropdownMenuLabel>Administración</DropdownMenuLabel>
 								<DropdownMenuItem
+									onClick={() => document.dispatchEvent(new Event('open-admin-manage-modal'))}
+								>
+									<Icon icon={LibrariesIcon} />
+									Asignaturas y tareas
+								</DropdownMenuItem>
+								<DropdownMenuItem
 									onClick={() => document.dispatchEvent(new Event('open-admin-subjects-modal'))}
 								>
 									<Icon icon={ViewIcon} />
@@ -180,6 +185,11 @@ export default function HeaderActions({ userEmail, isAdmin }: Props) {
 							<AvatarFallback className="bg-primary/10 font-semibold text-primary">
 								{initial}
 							</AvatarFallback>
+							{isAdmin && (
+								<AvatarBadge aria-label="Rol admin" title="Rol admin">
+									<Icon icon={Shield01Icon} />
+								</AvatarBadge>
+							)}
 						</Avatar>
 					</DropdownMenuTrigger>
 					<DropdownMenuContent align="end" className="w-64">

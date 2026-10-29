@@ -1,0 +1,38 @@
+---
+// Modal de administración: crear, editar y borrar asignaturas y sus tareas.
+import Modal from '../Modal.astro';
+import { Badge } from '../ui/badge';
+import AdminManagePanel, { type Subject } from './AdminManagePanel';
+
+interface Props {
+	subjects: Subject[];
+}
+
+const { subjects } = Astro.props;
+const taskCount = subjects.reduce((acc, subject) => acc + subject.tasks.length, 0);
+---
+
+<Modal id="admin-manage-modal" title="Asignaturas y tareas" size="xl">
+	<Fragment slot="header-extra">
+		<Badge variant="secondary" className="tabular-nums">
+			{taskCount} tareas
+		</Badge>
+	</Fragment>
+
+	<AdminManagePanel client:load subjects={subjects} />
+</Modal>
+
+<script>
+	const modal = document.getElementById('admin-manage-modal') as HTMLDialogElement | null;
+	let changed = false;
+
+	document.addEventListener('open-admin-manage-modal', () => modal?.showModal());
+	document.addEventListener('admin-manage-changed', () => {
+		changed = true;
+	});
+
+	// Recarga al cerrar para que el inicio refleje los cambios.
+	modal?.addEventListener('close', () => {
+		if (changed) location.reload();
+	});
+</script>

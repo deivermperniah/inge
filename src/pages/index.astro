@@ -6,6 +6,7 @@ import Modal from '../components/Modal.astro';
 import SubjectsModal from '../components/SubjectsModal.astro';
 import ScheduleModal from '../components/ScheduleModal.astro';
 import AdminSubjectsModal from '../components/admin/AdminSubjectsModal.astro';
+import AdminManageModal from '../components/admin/AdminManageModal.astro';
 
 const supabase = createClient(Astro.cookies, Astro.request);
 const {
@@ -56,7 +57,7 @@ const isAdmin = profile?.role === 'admin';
 const { data: adminSubjects } = isAdmin
 	? await supabase
 			.from('subjects')
-			.select('id, name, hidden')
+			.select('id, name, hidden, tasks(id, text, trimestre)')
 			.eq('trayecto_id', trayecto?.id)
 			.order('name')
 	: { data: null };
@@ -237,6 +238,7 @@ const totalTasks = visibleSubjects?.reduce((acc, s) => acc + s.tasks.length, 0) 
 	<SubjectsModal subjects={subjects ?? []} hidden={hiddenSet} />
 	<ScheduleModal subjects={subjects ?? []} done={doneSet} />
 	{isAdmin && <AdminSubjectsModal subjects={adminSubjects ?? []} />}
+	{isAdmin && <AdminManageModal subjects={adminSubjects ?? []} />}
 
 	<script>
 		const hdrProg = document.getElementById('hdr-prog');
