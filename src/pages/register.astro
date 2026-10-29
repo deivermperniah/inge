@@ -7,6 +7,15 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 
+const supabase = createClient(Astro.cookies, Astro.request);
+const {
+	data: { user },
+} = await supabase.auth.getUser();
+
+if (user) {
+	return Astro.redirect('/');
+}
+
 let error: string | null = null;
 let success = false;
 
@@ -18,7 +27,6 @@ if (Astro.request.method === 'POST') {
 	if (!email || !password) {
 		error = 'Completa todos los campos.';
 	} else {
-		const supabase = createClient(Astro.cookies, Astro.request);
 		const { data, error: authError } = await supabase.auth.signUp({
 			email,
 			password,
