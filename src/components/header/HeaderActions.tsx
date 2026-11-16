@@ -13,7 +13,7 @@ import {
 	UserGroupIcon,
 	ViewIcon,
 } from '@hugeicons/core-free-icons';
-import { Avatar, AvatarBadge, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -24,7 +24,6 @@ import {
 	DropdownMenuLabel,
 	DropdownMenuRadioGroup,
 	DropdownMenuRadioItem,
-	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -137,13 +136,13 @@ export default function HeaderActions({ userEmail, isAdmin }: Props) {
 				)}
 
 				<IconAction
-					label="Mis asignaturas"
+					label="Asignaturas"
 					icon={BookOpen01Icon}
 					onClick={() => document.dispatchEvent(new Event('open-subjects-modal'))}
 				/>
 
 				<IconAction
-					label="Horario y docentes"
+					label="Trayecto III 2026"
 					icon={Calendar03Icon}
 					onClick={() => document.dispatchEvent(new Event('open-schedule-modal'))}
 				/>
@@ -185,31 +184,24 @@ export default function HeaderActions({ userEmail, isAdmin }: Props) {
 							<AvatarFallback className="bg-primary/10 font-semibold text-primary">
 								{initial}
 							</AvatarFallback>
-							{isAdmin && (
-								<AvatarBadge aria-label="Rol admin" title="Rol admin">
-									<Icon icon={Shield01Icon} />
-								</AvatarBadge>
-							)}
 						</Avatar>
 					</DropdownMenuTrigger>
-					<DropdownMenuContent align="end" className="w-64">
-						<DropdownMenuGroup>
-							<DropdownMenuLabel className="flex items-center gap-3 text-foreground">
-								<Avatar size="lg">
-									<AvatarFallback className="bg-primary/10 font-semibold text-primary">
-										{initial}
-									</AvatarFallback>
-								</Avatar>
-								<div className="min-w-0">
-									<p className="truncate text-sm font-medium">{userEmail}</p>
-								</div>
-							</DropdownMenuLabel>
-						</DropdownMenuGroup>
-						<DropdownMenuSeparator />
-						<DropdownMenuItem variant="destructive" render={<a href="/logout" />}>
-							<Icon icon={Logout03Icon} />
-							Cerrar sesión
-						</DropdownMenuItem>
+					<DropdownMenuContent align="end" className="w-64 space-y-3 p-4">
+						<div>
+							<p className="text-[11px] tracking-wide text-muted-foreground">
+								Correo electrónico
+							</p>
+							<div className="flex items-center gap-2">
+								<p className="truncate text-sm text-foreground">{userEmail}</p>
+								{isAdmin && <Badge>Admin</Badge>}
+							</div>
+						</div>
+						<div className="border-t border-border pt-3">
+							<Button variant="destructive" className="w-full" render={<a href="/logout" />}>
+								<Icon icon={Logout03Icon} />
+								Cerrar sesión
+							</Button>
+						</div>
 					</DropdownMenuContent>
 				</DropdownMenu>
 			</div>
