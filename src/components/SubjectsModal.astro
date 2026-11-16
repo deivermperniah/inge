@@ -2,7 +2,7 @@
 import Modal from './Modal.astro';
 import Icon from './Icon.astro';
 import Switch from './Switch.astro';
-import { BookOpen01Icon } from '@hugeicons/core-free-icons';
+import { BookOpen01Icon, InformationCircleIcon } from '@hugeicons/core-free-icons';
 
 interface Props {
 	subjects: { id: string; name: string }[];
@@ -12,9 +12,10 @@ interface Props {
 const { subjects, hidden } = Astro.props;
 ---
 
-<Modal id="subjects-modal" title="Mis asignaturas" size="lg">
-	<p class="mb-4 text-sm text-muted-foreground">
-		Oculta las asignaturas que no quieres ver en tu inicio.
+<Modal id="subjects-modal" title="Asignaturas" size="lg">
+	<p class="mb-4 flex items-center gap-2 text-sm text-muted-foreground">
+		<Icon icon={InformationCircleIcon} size={14} />
+		Puedes ocultar una asignatura para que no aparezca en tu inicio.
 	</p>
 
 	{
@@ -48,9 +49,13 @@ const { subjects, hidden } = Astro.props;
 </Modal>
 
 <script>
-	document.addEventListener('open-subjects-modal', () => {
-		const modal = document.getElementById('subjects-modal') as HTMLDialogElement;
-		modal?.showModal();
+	const modal = document.getElementById('subjects-modal') as HTMLDialogElement | null;
+	let changed = false;
+
+	document.addEventListener('open-subjects-modal', () => modal?.showModal());
+
+	modal?.addEventListener('close', () => {
+		if (changed) location.reload();
 	});
 
 	document.querySelectorAll<HTMLButtonElement>('.subject-switch').forEach((sw) => {
@@ -72,6 +77,7 @@ const { subjects, hidden } = Astro.props;
 					body: JSON.stringify({ subject_id: row.dataset.subjectId, hidden: nowHidden }),
 				});
 				if (!res.ok) throw new Error(String(res.status));
+				changed = true;
 			} catch {
 				row.dataset.hidden = String(wasHidden);
 				sw.setAttribute('aria-checked', String(!wasHidden));
