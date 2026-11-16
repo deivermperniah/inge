@@ -260,9 +260,7 @@ function SubjectCard({
 
 			<div className="grid divide-y divide-border sm:grid-cols-3 sm:divide-x sm:divide-y-0">
 				{TRIMESTRES.map((trimestre) => {
-					const tasks = subject.tasks
-						.filter((task) => task.trimestre === trimestre)
-						.reverse();
+					const tasks = subject.tasks.filter((task) => task.trimestre === trimestre);
 
 					return (
 						<div key={trimestre} className="flex flex-col px-2.5 py-2">
@@ -420,7 +418,7 @@ export default function AdminManagePanel({ subjects: initial }: Props) {
 			trimestre,
 		});
 		setSubjects((prev) =>
-			prev.map((s) => (s.id === subjectId ? { ...s, tasks: [task, ...s.tasks] } : s)),
+			prev.map((s) => (s.id === subjectId ? { ...s, tasks: [...s.tasks, task] } : s)),
 		);
 		notifyChanged();
 	}

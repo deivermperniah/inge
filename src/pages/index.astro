@@ -28,7 +28,8 @@ const { data: subjects } = await supabase
 	.select('id, name, tasks(id, text, trimestre)')
 	.eq('trayecto_id', trayecto?.id)
 	.eq('hidden', false)
-	.order('name');
+	.order('name')
+	.order('sort_order', { referencedTable: 'tasks' });
 
 const { data: hidden } = await supabase
 	.from('hidden_subjects')
@@ -60,6 +61,7 @@ const { data: adminSubjects } = isAdmin
 			.select('id, name, hidden, tasks(id, text, trimestre)')
 			.eq('trayecto_id', trayecto?.id)
 			.order('name')
+			.order('sort_order', { referencedTable: 'tasks' })
 	: { data: null };
 
 // Estado por trimestre: none | pending | progress | complete
@@ -175,7 +177,7 @@ const totalTasks = visibleSubjects?.reduce((acc, s) => acc + s.tasks.length, 0) 
 					<p class="py-6 text-center text-sm text-muted-foreground">Ninguna tarea aún</p>
 				) : (
 					[1, 2, 3].map((t) => {
-						const tasks = subject.tasks.filter((task) => task.trimestre === t).reverse();
+						const tasks = subject.tasks.filter((task) => task.trimestre === t);
 						if (tasks.length === 0) return null;
 
 						return (
