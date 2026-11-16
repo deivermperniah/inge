@@ -4,25 +4,18 @@ import { BookOpen01Icon, InformationCircleIcon } from '@hugeicons/core-free-icon
 import Modal from '../Modal.astro';
 import Icon from '../Icon.astro';
 import Switch from '../Switch.astro';
-import { Badge } from '../ui/badge';
 
 interface Props {
 	subjects: { id: string; name: string; hidden: boolean }[];
 }
 
 const { subjects } = Astro.props;
-const visibleCount = subjects.filter((s) => !s.hidden).length;
 ---
 
 <Modal id="admin-subjects-modal" title="Visibilidad de asignaturas" size="lg">
-	<Fragment slot="header-extra">
-		<Badge variant="secondary" className="tabular-nums">
-			<span><span data-admin-visible-count>{visibleCount}</span>/{subjects.length} visibles</span>
-		</Badge>
-	</Fragment>
-
-	<p class="mb-4 text-sm text-muted-foreground">
-		Las asignaturas ocultas no aparecen en el inicio de ningún usuario.
+	<p class="mb-4 flex items-center gap-2 text-sm text-muted-foreground">
+		<Icon icon={InformationCircleIcon} size={14} />
+		Ocultar una asignatura la oculta para todos los usuarios.
 	</p>
 
 	{
@@ -44,10 +37,6 @@ const visibleCount = subjects.filter((s) => !s.hidden).length;
 						<span class="min-w-0 flex-1 truncate text-sm font-medium transition-colors group-data-[hidden=true]:text-muted-foreground">
 							{subject.name}
 						</span>
-						<Badge className="bg-success/15 text-success group-data-[hidden=true]:hidden">Visible</Badge>
-						<Badge variant="outline" className="hidden text-muted-foreground group-data-[hidden=true]:inline-flex">
-							Oculta
-						</Badge>
 						<Switch
 							checked={!subject.hidden}
 							label={`Mostrar ${subject.name}`}
@@ -59,18 +48,11 @@ const visibleCount = subjects.filter((s) => !s.hidden).length;
 		)
 	}
 
-	<div slot="footer" class="flex items-center justify-between gap-3 text-xs">
-		<p class="flex items-center gap-2 text-muted-foreground">
-			<Icon icon={InformationCircleIcon} size={14} />
-			Los cambios afectan a todos los usuarios.
-		</p>
-		<p class="hidden text-destructive" data-admin-error>No se pudo guardar el cambio.</p>
-	</div>
+	<p class="mt-3 hidden text-xs text-destructive" data-admin-error>No se pudo guardar el cambio.</p>
 </Modal>
 
 <script>
 	const modal = document.getElementById('admin-subjects-modal') as HTMLDialogElement | null;
-	const countEl = modal?.querySelector('[data-admin-visible-count]');
 	const errorEl = modal?.querySelector<HTMLElement>('[data-admin-error]');
 	let changed = false;
 
@@ -81,19 +63,12 @@ const visibleCount = subjects.filter((s) => !s.hidden).length;
 		if (changed) location.reload();
 	});
 
-	function updateCount() {
-		if (!modal || !countEl) return;
-		const visible = modal.querySelectorAll('[data-admin-subject][data-hidden="false"]').length;
-		countEl.textContent = String(visible);
-	}
-
 	modal?.querySelectorAll<HTMLButtonElement>('.admin-subject-switch').forEach((sw) => {
 		const row = sw.closest<HTMLElement>('[data-admin-subject]')!;
 
 		const render = (hidden: boolean) => {
 			row.dataset.hidden = String(hidden);
 			sw.setAttribute('aria-checked', String(!hidden));
-			updateCount();
 		};
 
 		sw.addEventListener('click', async () => {
