@@ -33,8 +33,7 @@ src/
 ├── data/               # Datos estáticos (schedule.ts)
 └── styles/global.css   # Tokens del tema
 supabase/
-├── migrations/         # Esquema y políticas RLS
-└── seed.sql            # Datos iniciales
+└── schema.sql          # Tablas y políticas RLS
 ```
 
 ## Puesta en marcha
@@ -52,7 +51,7 @@ supabase/
    PUBLIC_SUPABASE_ANON_KEY=<anon key>
    ```
 
-3. En el editor SQL de Supabase, ejecuta en orden las migraciones de `supabase/migrations/` y luego `supabase/seed.sql`.
+3. En el editor SQL de Supabase, ejecuta `supabase/schema.sql`.
 
 4. Inicia el servidor de desarrollo en `http://localhost:4321`:
 

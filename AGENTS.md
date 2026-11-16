@@ -30,7 +30,7 @@
 - `src/lib/`: cliente de Supabase, tema y utilidades.
 - `src/data/`: datos estáticos (`schedule.ts`).
 - `src/styles/global.css`: tokens del tema.
-- `supabase/`: `migrations/` (esquema y RLS) y `seed.sql`.
+- `supabase/`: `schema.sql` (tablas y RLS).
 
 ## Convenciones
 
