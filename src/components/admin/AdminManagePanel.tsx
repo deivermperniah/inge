@@ -446,6 +446,11 @@ export default function AdminManagePanel({ subjects: initial }: Props) {
 
 	return (
 		<div className="flex flex-col gap-4">
+			<p className="flex items-center gap-2 text-sm text-muted-foreground">
+				<Icon icon={InformationCircleIcon} size={14} />
+				Los cambios en asignaturas y tareas afectan a todos los usuarios.
+			</p>
+
 			<form onSubmit={addSubject} className="flex items-center gap-2">
 				<Input
 					value={newName}
@@ -480,11 +485,6 @@ export default function AdminManagePanel({ subjects: initial }: Props) {
 					))}
 				</ul>
 			)}
-
-			<p className="flex items-center gap-2 text-xs text-muted-foreground">
-				<Icon icon={InformationCircleIcon} size={14} />
-				Los cambios afectan a todos los usuarios.
-			</p>
 		</div>
 	);
 }
