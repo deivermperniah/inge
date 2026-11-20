@@ -181,7 +181,6 @@ function SubjectCard({
 	}
 
 	async function removeTask(task: Task) {
-		if (!confirm(`¿Eliminar la tarea "${task.text}"?`)) return;
 		setPending(`delete-task-${task.id}`);
 		setError(null);
 		try {
