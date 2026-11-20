@@ -17,52 +17,30 @@ if (!user) {
 	return Astro.redirect('/login');
 }
 
-const { data: trayecto } = await supabase
-	.from('trayectos')
-	.select('id, year, name')
-	.eq('active', true)
-	.single();
+const [{ data: trayecto }, { data: hidden }, { data: progress }, { data: profile }] =
+	await Promise.all([
+		supabase.from('trayectos').select('id, year, name').eq('active', true).single(),
+		supabase.from('hidden_subjects').select('subject_id').eq('user_id', user.id),
+		supabase.from('task_progress').select('task_id, done').eq('user_id', user.id),
+		supabase.from('profiles').select('role').eq('id', user.id).single(),
+	]);
 
-const { data: subjects } = await supabase
+const isAdmin = profile?.role === 'admin';
+
+const { data: allSubjects } = await supabase
 	.from('subjects')
-	.select('id, name, tasks(id, text, trimestre)')
+	.select('id, name, hidden, tasks(id, text, trimestre)')
 	.eq('trayecto_id', trayecto?.id)
-	.eq('hidden', false)
 	.order('name')
 	.order('sort_order', { referencedTable: 'tasks' });
 
-const { data: hidden } = await supabase
-	.from('hidden_subjects')
-	.select('subject_id')
-	.eq('user_id', user.id);
+const subjects = allSubjects?.filter((s) => !s.hidden);
+const adminSubjects = isAdmin ? allSubjects : null;
 
 const hiddenSet = new Set(hidden?.map((h) => h.subject_id));
 const visibleSubjects = subjects?.filter((s) => !hiddenSet.has(s.id));
 
-const { data: progress } = await supabase
-	.from('task_progress')
-	.select('task_id, done')
-	.eq('user_id', user.id);
-
 const doneSet = new Set(progress?.filter((p) => p.done).map((p) => p.task_id));
-
-const { data: profile } = await supabase
-	.from('profiles')
-	.select('role')
-	.eq('id', user.id)
-	.single();
-
-const isAdmin = profile?.role === 'admin';
-
-// Solo para admins: todas las asignaturas del trayecto, incluidas las ocultas
-const { data: adminSubjects } = isAdmin
-	? await supabase
-			.from('subjects')
-			.select('id, name, hidden, tasks(id, text, trimestre)')
-			.eq('trayecto_id', trayecto?.id)
-			.order('name')
-			.order('sort_order', { referencedTable: 'tasks' })
-	: { data: null };
 
 // Estado por trimestre: none | pending | progress | complete
 function trimStatus(tasks: { id: string; trimestre: number }[], t: number) {
