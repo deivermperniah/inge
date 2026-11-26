@@ -60,10 +60,13 @@ const statusClass = {
 } as const;
 
 const totalTasks = visibleSubjects?.reduce((acc, s) => acc + s.tasks.length, 0) ?? 0;
+
+const allTasks = subjects?.flatMap((s) => s.tasks) ?? [];
+const allDone = allTasks.filter((t) => doneSet.has(t.id)).length;
 ---
 
 <AppLayout title="Inicio">
-	<Header userEmail={user.email ?? ''} totalTasks={totalTasks} doneTasks={doneSet.size} isAdmin={isAdmin} />
+	<Header userEmail={user.email ?? ''} totalTasks={allTasks.length} doneTasks={allDone} isAdmin={isAdmin} />
 
 	<main class="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6">
 		<div class="mb-6 flex flex-wrap items-baseline gap-x-6 gap-y-1 text-sm">
@@ -231,11 +234,15 @@ const totalTasks = visibleSubjects?.reduce((acc, s) => acc + s.tasks.length, 0) 
 			state.set(btn.dataset.taskId!, btn.getAttribute('aria-pressed') === 'true');
 		});
 
+		const countDone = () => [...state.values()].filter(Boolean).length;
+		const header = document.querySelector<HTMLElement>('header[data-total-tasks]');
+		const hiddenTotal = Number(header?.dataset.totalTasks ?? 0) - state.size;
+		const hiddenDone = Number(header?.dataset.doneTasks ?? 0) - countDone();
+
 		function recomputeAll() {
 			// Header global
-			let done = 0;
-			for (const d of state.values()) if (d) done++;
-			const total = state.size;
+			const done = countDone() + hiddenDone;
+			const total = state.size + hiddenTotal;
 			const pct = total > 0 ? Math.round((done / total) * 100) : 0;
 			if (hdrProg) hdrProg.style.width = `${pct}%`;
 			if (hdrDone) hdrDone.textContent = String(done);
