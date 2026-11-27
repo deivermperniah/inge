@@ -1,5 +1,6 @@
 ---
 import AppLayout from '../layouts/AppLayout.astro';
+import logo from '../assets/logo.png';
 import Icon from '../components/Icon.astro';
 import { Loading03Icon, ViewIcon, ViewOffSlashIcon } from '@hugeicons/core-free-icons';
 import { Button } from '../components/ui/button';
@@ -11,7 +12,7 @@ import { Label } from '../components/ui/label';
 	<main class="flex min-h-screen items-center justify-center px-6 py-12">
 		<div class="w-full max-w-sm">
 			<div class="mb-8 flex flex-col items-center gap-3 text-center">
-				<img src="/logo.png" alt="inge" class="size-12" />
+				<img src={logo.src} alt="inge" class="size-12" />
 				<h1 class="text-2xl font-semibold tracking-tight">Crear cuenta</h1>
 				<p class="text-sm text-muted-foreground">
 					Marca tus tareas y sigue tu progreso por trimestre.

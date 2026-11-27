@@ -3,6 +3,7 @@
 import '../styles/global.css';
 import ThemeScript from '../components/ThemeScript.astro';
 import { cn } from '../lib/utils';
+import logo from '../assets/logo.png';
 
 interface Props {
 	title: string;
@@ -15,7 +16,7 @@ const { title, bodyClass } = Astro.props;
 <html lang="es">
 	<head>
 		<meta charset="utf-8" />
-		<link rel="icon" type="image/png" href="/logo.png" />
+		<link rel="icon" type="image/png" href={logo.src} />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<ThemeScript />
 		<title>{title} · inge</title>
