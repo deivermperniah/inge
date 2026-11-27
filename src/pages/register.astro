@@ -2,45 +2,9 @@
 import AppLayout from '../layouts/AppLayout.astro';
 import Icon from '../components/Icon.astro';
 import { Loading03Icon, ViewIcon, ViewOffSlashIcon } from '@hugeicons/core-free-icons';
-import { createClient } from '../lib/supabase';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
-
-const supabase = createClient(Astro.cookies, Astro.request);
-const {
-	data: { user },
-} = await supabase.auth.getUser();
-
-if (user) {
-	return Astro.redirect('/');
-}
-
-let error: string | null = null;
-let success = false;
-
-if (Astro.request.method === 'POST') {
-	const formData = await Astro.request.formData();
-	const email = formData.get('email')?.toString() ?? '';
-	const password = formData.get('password')?.toString() ?? '';
-
-	if (!email || !password) {
-		error = 'Completa todos los campos.';
-	} else {
-		const { data, error: authError } = await supabase.auth.signUp({
-			email,
-			password,
-		});
-
-		if (authError) {
-			error = authError.message;
-		} else if (data.session) {
-			return Astro.redirect('/');
-		} else {
-			success = true;
-		}
-	}
-}
 ---
 
 <AppLayout title="Crear cuenta">
@@ -54,63 +18,57 @@ if (Astro.request.method === 'POST') {
 				</p>
 			</div>
 
-			{success ? (
-				<p class="rounded-lg border border-success/30 bg-success/10 p-3 text-sm text-success">
-					Revisa tu correo para confirmar tu cuenta.
+			<p class="hidden rounded-lg border border-success/30 bg-success/10 p-3 text-sm text-success" data-success>
+				Revisa tu correo para confirmar tu cuenta.
+			</p>
+
+			<form class="flex flex-col gap-5">
+				<p class="hidden rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive" data-error></p>
+
+				<div class="flex flex-col gap-2">
+					<Label for="email">Correo electrónico</Label>
+					<Input id="email" name="email" type="email" placeholder="tu@correo.com" required />
+				</div>
+
+				<div class="flex flex-col gap-2">
+					<Label for="password">Contraseña</Label>
+					<div class="relative">
+						<Input
+							id="password"
+							name="password"
+							type="password"
+							placeholder="Mínimo 6 caracteres"
+							minlength={6}
+							className="pr-10"
+							required
+						/>
+						<button
+							type="button"
+							data-password-toggle
+							aria-controls="password"
+							aria-label="Mostrar contraseña"
+							class="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground transition-colors hover:text-foreground"
+						>
+							<Icon icon={ViewIcon} size={16} data-eye />
+							<Icon icon={ViewOffSlashIcon} size={16} class="hidden" data-eye-off />
+						</button>
+					</div>
+				</div>
+
+				<Button type="submit" className="w-full" data-submit>
+					<span class="hidden" data-spinner>
+						<Icon icon={Loading03Icon} size={16} class="animate-spin" />
+					</span>
+					Registrarse
+				</Button>
+
+				<p class="text-center text-sm text-muted-foreground">
+					¿Ya tienes cuenta?{' '}
+					<a href="/login" class="font-medium text-primary underline-offset-4 hover:underline">
+						Inicia sesión
+					</a>
 				</p>
-			) : (
-				<form method="POST" class="flex flex-col gap-5">
-					{error && (
-						<p class="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
-							{error}
-						</p>
-					)}
-
-					<div class="flex flex-col gap-2">
-						<Label for="email">Correo electrónico</Label>
-						<Input id="email" name="email" type="email" placeholder="tu@correo.com" required />
-					</div>
-
-					<div class="flex flex-col gap-2">
-						<Label for="password">Contraseña</Label>
-						<div class="relative">
-							<Input
-								id="password"
-								name="password"
-								type="password"
-								placeholder="Mínimo 6 caracteres"
-								minlength={6}
-								className="pr-10"
-								required
-							/>
-							<button
-								type="button"
-								data-password-toggle
-								aria-controls="password"
-								aria-label="Mostrar contraseña"
-								class="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground transition-colors hover:text-foreground"
-							>
-								<Icon icon={ViewIcon} size={16} data-eye />
-								<Icon icon={ViewOffSlashIcon} size={16} class="hidden" data-eye-off />
-							</button>
-						</div>
-					</div>
-
-					<Button type="submit" className="w-full" data-submit>
-						<span class="hidden" data-spinner>
-							<Icon icon={Loading03Icon} size={16} class="animate-spin" />
-						</span>
-						Registrarse
-					</Button>
-
-					<p class="text-center text-sm text-muted-foreground">
-						¿Ya tienes cuenta?{' '}
-						<a href="/login" class="font-medium text-primary underline-offset-4 hover:underline">
-							Inicia sesión
-						</a>
-					</p>
-				</form>
-			)}
+			</form>
 		</div>
 	</main>
 	<script is:inline>
@@ -129,16 +87,44 @@ if (Astro.request.method === 'POST') {
 					eyeOff.classList.toggle('hidden', isVisible);
 				});
 			});
+		});
+	</script>
+	<script>
+		import { getUserId } from '../lib/data';
+		import { signUp } from '../lib/auth';
 
-			document.querySelectorAll('form').forEach((form) => {
-				form.addEventListener('submit', () => {
-					const btn = form.querySelector('[data-submit]');
-					if (!(btn instanceof HTMLButtonElement)) return;
-					btn.disabled = true;
-					btn.setAttribute('aria-busy', 'true');
-					btn.querySelector('[data-spinner]')?.classList.remove('hidden');
-				});
-			});
+		getUserId().then((id) => {
+			if (id) location.replace('/');
+		});
+
+		const form = document.querySelector('form')!;
+		const btn = form.querySelector<HTMLButtonElement>('[data-submit]')!;
+		const spinner = btn.querySelector('[data-spinner]');
+		const errorEl = form.querySelector<HTMLElement>('[data-error]')!;
+
+		function setBusy(busy: boolean) {
+			btn.disabled = busy;
+			btn.toggleAttribute('aria-busy', busy);
+			spinner?.classList.toggle('hidden', !busy);
+		}
+
+		form.addEventListener('submit', async (event) => {
+			event.preventDefault();
+			const data = new FormData(form);
+			const email = data.get('email')?.toString() ?? '';
+			const password = data.get('password')?.toString() ?? '';
+			errorEl.classList.add('hidden');
+			setBusy(true);
+			const { error, session } = await signUp(email, password);
+			if (session) return location.replace('/');
+			setBusy(false);
+			if (error) {
+				errorEl.textContent = error;
+				errorEl.classList.remove('hidden');
+				return;
+			}
+			form.classList.add('hidden');
+			document.querySelector('[data-success]')?.classList.remove('hidden');
 		});
 	</script>
 </AppLayout>

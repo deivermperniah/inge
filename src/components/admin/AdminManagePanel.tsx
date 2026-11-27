@@ -12,6 +12,7 @@ import {
 } from '@hugeicons/core-free-icons';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import * as data from '@/lib/data';
 
 export interface Task {
 	id: string;
@@ -37,17 +38,6 @@ function Icon({ icon, size = 16 }: { icon: IconSvgElement; size?: number }) {
 
 function Spinner({ size = 16 }: { size?: number }) {
 	return <HugeiconsIcon icon={Loading03Icon} size={size} strokeWidth={1.8} className="animate-spin" />;
-}
-
-async function post(url: string, body: unknown) {
-	const res = await fetch(url, {
-		method: 'POST',
-		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify(body),
-	});
-	const data = await res.json().catch(() => ({}));
-	if (!res.ok) throw new Error(data.error ?? 'No se pudo guardar el cambio');
-	return data;
 }
 
 function notifyChanged() {
@@ -386,7 +376,7 @@ export default function AdminManagePanel({ subjects: initial }: Props) {
 		setBusy(true);
 		setError(null);
 		try {
-			const { subject } = await post('/api/subjects/manage', { action: 'create', name });
+			const subject = await data.createSubject(name);
 			setSubjects((prev) => [...prev, { id: subject.id, name: subject.name, tasks: [] }]);
 			setNewName('');
 			notifyChanged();
@@ -398,24 +388,19 @@ export default function AdminManagePanel({ subjects: initial }: Props) {
 	}
 
 	async function renameSubject(id: string, name: string) {
-		await post('/api/subjects/manage', { action: 'update', id, name });
+		await data.updateSubject(id, name);
 		setSubjects((prev) => prev.map((s) => (s.id === id ? { ...s, name } : s)));
 		notifyChanged();
 	}
 
 	async function deleteSubject(id: string) {
-		await post('/api/subjects/manage', { action: 'delete', id });
+		await data.deleteSubject(id);
 		setSubjects((prev) => prev.filter((s) => s.id !== id));
 		notifyChanged();
 	}
 
 	async function addTask(subjectId: string, text: string, trimestre: number) {
-		const { task } = await post('/api/tasks/manage', {
-			action: 'create',
-			subject_id: subjectId,
-			text,
-			trimestre,
-		});
+		const task = await data.createTask(subjectId, text, trimestre);
 		setSubjects((prev) =>
 			prev.map((s) => (s.id === subjectId ? { ...s, tasks: [...s.tasks, task] } : s)),
 		);
@@ -423,7 +408,7 @@ export default function AdminManagePanel({ subjects: initial }: Props) {
 	}
 
 	async function editTask(taskId: string, text: string, trimestre: number) {
-		await post('/api/tasks/manage', { action: 'update', id: taskId, text, trimestre });
+		await data.updateTask(taskId, text, trimestre);
 		setSubjects((prev) =>
 			prev.map((s) => ({
 				...s,
@@ -434,7 +419,7 @@ export default function AdminManagePanel({ subjects: initial }: Props) {
 	}
 
 	async function deleteTask(taskId: string) {
-		await post('/api/tasks/manage', { action: 'delete', id: taskId });
+		await data.deleteTask(taskId);
 		setSubjects((prev) =>
 			prev.map((s) => ({ ...s, tasks: s.tasks.filter((t) => t.id !== taskId) })),
 		);

@@ -1,23 +1,8 @@
 ---
 import HeaderActions from './header/HeaderActions';
-
-interface Props {
-	userEmail: string;
-	totalTasks: number;
-	doneTasks: number;
-	isAdmin: boolean;
-}
-
-const { userEmail, totalTasks, doneTasks, isAdmin } = Astro.props;
-
-const pct = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0;
 ---
 
-<header
-	class="sticky top-0 z-40 border-b bg-background/80 backdrop-blur-xl supports-backdrop-filter:bg-background/70"
-	data-total-tasks={totalTasks}
-	data-done-tasks={doneTasks}
->
+<header class="sticky top-0 z-40 border-b bg-background/80 backdrop-blur-xl supports-backdrop-filter:bg-background/70">
 	<div class="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
 		<a
 			href="/"
@@ -27,18 +12,10 @@ const pct = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0;
 			<span class="text-lg font-semibold tracking-tight">inge</span>
 		</a>
 
-		<HeaderActions client:load userEmail={userEmail} isAdmin={isAdmin} />
+		<HeaderActions client:load />
 	</div>
 
-	{
-		totalTasks > 0 && (
-			<div class="absolute inset-x-0 -bottom-px h-0.5" aria-hidden="true">
-				<div
-					id="hdr-prog"
-					class="h-full bg-primary transition-[width] duration-500 ease-out"
-					style={`width: ${pct}%`}
-				/>
-			</div>
-		)
-	}
+	<div class="absolute inset-x-0 -bottom-px h-0.5" aria-hidden="true">
+		<div id="hdr-prog" class="h-full bg-primary transition-[width] duration-500 ease-out" style="width: 0%"></div>
+	</div>
 </header>

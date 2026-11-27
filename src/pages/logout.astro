@@ -1,8 +1,11 @@
 ---
-import { createClient } from '../lib/supabase';
-
-const supabase = createClient(Astro.cookies, Astro.request);
-await supabase.auth.signOut();
-
-return Astro.redirect('/login');
+import AppLayout from '../layouts/AppLayout.astro';
 ---
+
+<AppLayout title="Cerrando sesión">
+	<script>
+		import { signOut } from '../lib/auth';
+
+		signOut().finally(() => location.replace('/login'));
+	</script>
+</AppLayout>

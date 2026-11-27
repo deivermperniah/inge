@@ -26,13 +26,10 @@ import {
 	DropdownMenuRadioItem,
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { getProfile, type Profile } from '@/lib/data';
 import { getStoredTheme, setTheme, watchSystemTheme, type Theme } from '@/lib/theme';
-
-interface Props {
-	userEmail: string;
-	isAdmin: boolean;
-}
 
 const THEMES: { value: Theme; label: string; icon: IconSvgElement }[] = [
 	{ value: 'system', label: 'Sistema', icon: ComputerIcon },
@@ -80,13 +77,18 @@ function IconAction({
 	);
 }
 
-export default function HeaderActions({ userEmail, isAdmin }: Props) {
+export default function HeaderActions() {
 	const [theme, setThemeState] = useState<Theme>('system');
+	const [profile, setProfile] = useState<Profile | null>(null);
 
 	useEffect(() => {
 		setThemeState(getStoredTheme());
+		getProfile().then(setProfile);
 		return watchSystemTheme();
 	}, []);
+
+	const userEmail = profile?.email ?? '';
+	const isAdmin = profile?.isAdmin ?? false;
 
 	const changeTheme = (value: Theme) => {
 		setThemeState(value);
@@ -171,39 +173,43 @@ export default function HeaderActions({ userEmail, isAdmin }: Props) {
 					</DropdownMenuContent>
 				</DropdownMenu>
 
-				<DropdownMenu>
-					<DropdownMenuTrigger
-						render={
-							<button
-								aria-label="Cuenta"
-								className="ml-1 rounded-full outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-							/>
-						}
-					>
-						<Avatar>
-							<AvatarFallback className="bg-primary/10 font-semibold text-primary">
-								{initial}
-							</AvatarFallback>
-						</Avatar>
-					</DropdownMenuTrigger>
-					<DropdownMenuContent align="end" className="w-64 space-y-3 p-4">
-						<div>
-							<p className="text-[11px] tracking-wide text-muted-foreground">
-								Correo electrónico
-							</p>
-							<div className="flex items-center gap-2">
-								<p className="truncate text-sm text-foreground">{userEmail}</p>
-								{isAdmin && <Badge>Admin</Badge>}
+				{!profile ? (
+					<Skeleton className="ml-1 size-8 rounded-full" />
+				) : (
+					<DropdownMenu>
+						<DropdownMenuTrigger
+							render={
+								<button
+									aria-label="Cuenta"
+									className="ml-1 rounded-full outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+								/>
+							}
+						>
+							<Avatar>
+								<AvatarFallback className="bg-primary/10 font-semibold text-primary">
+									{initial}
+								</AvatarFallback>
+							</Avatar>
+						</DropdownMenuTrigger>
+						<DropdownMenuContent align="end" className="w-64 space-y-3 p-4">
+							<div>
+								<p className="text-[11px] tracking-wide text-muted-foreground">
+									Correo electrónico
+								</p>
+								<div className="flex items-center gap-2">
+									<p className="truncate text-sm text-foreground">{userEmail}</p>
+									{isAdmin && <Badge>Admin</Badge>}
+								</div>
 							</div>
-						</div>
-						<div className="border-t border-border pt-3">
-							<Button variant="destructive" className="w-full" render={<a href="/logout" />}>
-								<Icon icon={Logout03Icon} />
-								Cerrar sesión
-							</Button>
-						</div>
-					</DropdownMenuContent>
-				</DropdownMenu>
+							<div className="border-t border-border pt-3">
+								<Button variant="destructive" className="w-full" render={<a href="/logout" />}>
+									<Icon icon={Logout03Icon} />
+									Cerrar sesión
+								</Button>
+							</div>
+						</DropdownMenuContent>
+					</DropdownMenu>
+				)}
 			</div>
 		</TooltipProvider>
 	);
