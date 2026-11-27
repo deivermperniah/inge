@@ -1,3 +1,4 @@
+import { clearCachedProfile } from './data';
 import { supabase } from './supabase';
 
 export async function signIn(email: string, password: string) {
@@ -11,5 +12,6 @@ export async function signUp(email: string, password: string) {
 }
 
 export async function signOut() {
+	clearCachedProfile();
 	await supabase.auth.signOut();
 }

@@ -1,7 +1,16 @@
 ---
 import HeaderActions from './header/HeaderActions';
+import { Skeleton } from './ui/skeleton';
 import logo from '../assets/logo.png';
 ---
+
+<script is:inline>
+	try {
+		if (JSON.parse(localStorage.getItem('profile') ?? 'null')?.isAdmin) {
+			document.documentElement.dataset.admin = 'true';
+		}
+	} catch {}
+</script>
 
 <header class="sticky top-0 z-40 border-b bg-background/80 backdrop-blur-xl supports-backdrop-filter:bg-background/70">
 	<div class="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
@@ -13,7 +22,19 @@ import logo from '../assets/logo.png';
 			<span class="text-lg font-semibold tracking-tight">inge</span>
 		</a>
 
-		<HeaderActions client:load />
+		<HeaderActions client:only="react">
+			<div slot="fallback" class="flex items-center gap-1">
+				<div class="hidden size-9 items-center justify-center in-data-[admin=true]:flex">
+					<Skeleton className="size-[18px] rounded-md" />
+				</div>
+				{[1, 2, 3].map(() => (
+					<div class="flex size-9 items-center justify-center">
+						<Skeleton className="size-[18px] rounded-md" />
+					</div>
+				))}
+				<Skeleton className="ml-1 size-8 rounded-full" />
+			</div>
+		</HeaderActions>
 	</div>
 
 	<div class="absolute inset-x-0 -bottom-px h-0.5" aria-hidden="true">

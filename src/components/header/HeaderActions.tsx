@@ -28,7 +28,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { getProfile, type Profile } from '@/lib/data';
+import { getCachedProfile, getProfile, type Profile } from '@/lib/data';
 import { getStoredTheme, setTheme, watchSystemTheme, type Theme } from '@/lib/theme';
 
 const THEMES: { value: Theme; label: string; icon: IconSvgElement }[] = [
@@ -79,7 +79,7 @@ function IconAction({
 
 export default function HeaderActions() {
 	const [theme, setThemeState] = useState<Theme>('system');
-	const [profile, setProfile] = useState<Profile | null>(null);
+	const [profile, setProfile] = useState<Profile | null>(getCachedProfile);
 
 	useEffect(() => {
 		setThemeState(getStoredTheme());

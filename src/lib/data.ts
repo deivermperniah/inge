@@ -37,6 +37,22 @@ export async function getUserId() {
 	return session?.user.id ?? null;
 }
 
+const PROFILE_KEY = 'profile';
+
+export function getCachedProfile(): Profile | null {
+	try {
+		return JSON.parse(localStorage.getItem(PROFILE_KEY) ?? 'null');
+	} catch {
+		return null;
+	}
+}
+
+export function clearCachedProfile() {
+	try {
+		localStorage.removeItem(PROFILE_KEY);
+	} catch {}
+}
+
 let profilePromise: Promise<Profile | null> | undefined;
 
 export function getProfile() {
@@ -45,9 +61,16 @@ export function getProfile() {
 			data: { session },
 		} = await supabase.auth.getSession();
 		const user = session?.user;
-		if (!user) return null;
+		if (!user) {
+			clearCachedProfile();
+			return null;
+		}
 		const { data } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-		return { id: user.id, email: user.email ?? '', isAdmin: data?.role === 'admin' };
+		const profile = { id: user.id, email: user.email ?? '', isAdmin: data?.role === 'admin' };
+		try {
+			localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+		} catch {}
+		return profile;
 	})();
 	return profilePromise;
 }
